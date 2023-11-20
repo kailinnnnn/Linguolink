@@ -45,7 +45,7 @@ const api = {
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential.accessToken;
       const user = result.user;
-      const userRef = doc(db, "user", user.uid);
+      const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
       const newUser = {
         name: user.displayName,
@@ -72,7 +72,7 @@ const api = {
         password,
       );
       const uid = userCredential.user.uid;
-      const userRef = doc(db, "user", uid);
+      const userRef = doc(db, "users", uid);
       const userData = {
         name: name,
         email: email,
@@ -93,40 +93,30 @@ const api = {
         password,
       );
       const user = userCredential.user;
-      const userRef = doc(db, "user", user.uid);
+      const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
       const userData = docSnap.data();
       userData.id = docSnap.id;
-
-      const chatrooms = userData?.chatrooms;
-      console.log(chatrooms);
-      // 添加防錯機制，檢查 chatrooms 是否存在並且為陣列
-      const chatroomsData = chatrooms
-        ? await Promise.all(
-            chatrooms.map(async (chatroom) => {
-              const chatroomRef = doc(db, "chatroom", chatroom.id);
-              const chatroomSnapshot = await getDoc(chatroomRef);
-
-              // 添加檢查以確保 chatroom 存在
-              if (chatroomSnapshot.exists()) {
-                const chatroomData = chatroomSnapshot.data();
-                return {
-                  ...chatroomData,
-                  participants: chatroom.participants,
-                  id: chatroomSnapshot.id,
-                };
-              } else {
-                // 如果 chatroom 不存在，可以返回一個預設值或者 null
-                return null;
-              }
-            }),
-          )
-        : [];
-
-      console.log(chatroomsData);
-      userData.chatrooms = chatroomsData;
-
-      console.log(userData);
+      // const chatrooms = userData?.chatrooms;
+      // const chatroomsData = chatrooms
+      //   ? await Promise.all(
+      //       chatrooms.map(async (chatroom) => {
+      //         const chatroomRef = doc(db, "chatrooms", chatroom.id);
+      //         const chatroomSnapshot = await getDoc(chatroomRef);
+      //         if (chatroomSnapshot.exists()) {
+      //           const chatroomData = chatroomSnapshot.data();
+      //           return {
+      //             ...chatroomData,
+      //             participants: chatroom.participants,
+      //             id: chatroomSnapshot.id,
+      //           };
+      //         } else {
+      //           return null;
+      //         }
+      //       }),
+      //     )
+      //   : [];
+      // userData.chatrooms = chatroomsData;
       // 返回包含用户ID的对象
       return userData;
     } catch (error) {
@@ -137,7 +127,7 @@ const api = {
 
   async getAllUsers() {
     try {
-      const userCol = collection(db, "user");
+      const userCol = collection(db, "users");
       const userSnapshot = await getDocs(userCol);
       const userList = userSnapshot.docs.map((doc) => {
         // 在每个用户数据中包含文档的 ID
@@ -155,7 +145,7 @@ const api = {
   },
   async getUser(id) {
     try {
-      const userRef = doc(db, "user", id);
+      const userRef = doc(db, "users", id);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.data();
       userData.id = userSnap.id;
@@ -167,33 +157,60 @@ const api = {
   },
   async createChatroom(userId, targetUserId) {
     try {
-      const chatroomRef = collection(db, "chatroom");
+      const chatroomRef = collection(db, "chatrooms");
       const newChatroomRef = await addDoc(chatroomRef, {
         participants: [userId, targetUserId],
+        createBy: userId,
+        createdAt: serverTimestamp(),
         messages: [],
       });
+
       const newChatroomId = newChatroomRef.id;
-      const userRef = doc(db, "user", userId);
-      await updateDoc(userRef, {
-        chatrooms: arrayUnion({
-          id: newChatroomId,
-          participants: [userId, targetUserId],
-        }),
-      });
-      const targetUserRef = doc(db, "user", targetUserId);
-      await updateDoc(targetUserRef, {
-        chatrooms: arrayUnion({
-          id: newChatroomId,
-          participants: [userId, targetUserId],
-        }),
+      const userChatroomsRef = collection(db, "users", userId, "chatrooms");
+      await addDoc(userChatroomsRef, {
+        id: newChatroomId,
+        participants: [userId, targetUserId],
+        createBy: userId,
+        createdAt: serverTimestamp(),
+        messages: [],
       });
 
+      const targetUserChatroomsRef = collection(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+      );
+      await addDoc(targetUserChatroomsRef, {
+        id: newChatroomId,
+        participants: [userId, targetUserId],
+        createBy: userId,
+        createdAt: serverTimestamp(),
+        messages: [],
+      });
       return newChatroomId;
     } catch (error) {
       console.log(error);
       throw error;
     }
   },
+
+  //Listen to the user's chatrooms sub-collection
+  async listenChatrooms(userId, callback) {
+    const userChatroomsRef = collection(db, "users", userId, "chatrooms");
+    const unsubscribe = onSnapshot(userChatroomsRef, (querySnapshot) => {
+      const userChatrooms = querySnapshot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          ...doc.data(),
+        };
+      });
+      callback(userChatrooms);
+    });
+
+    return unsubscribe;
+  },
+
   // async getChatrooms(userId) {
   //   try {
   //     const userRef = doc(db, "user", userId);
@@ -241,16 +258,63 @@ const api = {
       throw error;
     }
   },
-  async sendMessage(chatroomId, userId, content) {
+  async sendMessage(chatroomId, userId, targetUserId, content) {
     try {
-      const chatroomRef = doc(db, "chatroom", chatroomId);
-      console.log(chatroomId);
-      console.log(chatroomRef);
+      const chatroomRef = doc(db, "chatrooms", chatroomId);
+
       await updateDoc(chatroomRef, {
         messages: arrayUnion({
           content: content,
           sender: userId,
-          //符合firebase規定的時間格式
+          createdAt: new Date(),
+        }),
+      });
+      const userChatroomsRef = collection(db, "users", userId, "chatrooms");
+      const queryUserChatroomsRef = query(
+        userChatroomsRef,
+        where("id", "==", chatroomId),
+      );
+      const queryUserChatroomsSnapshot = await getDocs(queryUserChatroomsRef);
+      const userChatroomDoc = queryUserChatroomsSnapshot.docs[0];
+      const userChatroomRef = doc(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        userChatroomDoc.ref.id,
+      );
+      await updateDoc(userChatroomRef, {
+        messages: arrayUnion({
+          content: content,
+          sender: userId,
+          createdAt: new Date(),
+        }),
+      });
+      const targetUserChatroomsRef = collection(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+      );
+      const querytargetUserChatroomsRef = query(
+        targetUserChatroomsRef,
+        where("id", "==", chatroomId),
+      );
+      const querytargetUserChatroomsSnapshot = await getDocs(
+        querytargetUserChatroomsRef,
+      );
+      const targetUserChatroomDoc = querytargetUserChatroomsSnapshot.docs[0];
+      const targetUserChatroomRef = doc(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+        targetUserChatroomDoc.ref.id,
+      );
+      await updateDoc(targetUserChatroomRef, {
+        messages: arrayUnion({
+          content: content,
+          sender: userId,
           createdAt: new Date(),
         }),
       });
@@ -259,10 +323,11 @@ const api = {
       throw error;
     }
   },
+
   //監聽聊天室資料庫
   async listenChatroom(chatroomId, callback) {
     try {
-      const chatroomRef = doc(db, "chatroom", chatroomId);
+      const chatroomRef = doc(db, "chatrooms", chatroomId);
       const unsubscribe = onSnapshot(chatroomRef, (doc) => {
         const chatroomData = doc.data();
         chatroomData.id = doc.id;

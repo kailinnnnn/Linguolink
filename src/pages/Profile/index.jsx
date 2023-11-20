@@ -2,12 +2,15 @@ import api from "../../utils/api";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
+import useChatroomsStore from "../../zustand/ChatroomsStore";
 
 const buttonStyles = "rounded-full bg-gray-300 w-8 h-8";
 const Profile = () => {
   const userProfileId = useParams().id;
   const { setUser, logout, user } = useAuthStore();
+  const { chatrooms, setChatrooms } = useChatroomsStore();
   const [userProfileData, setUserProfileData] = useState({});
+
   const navigate = useNavigate();
   useEffect(() => {
     async function getUser() {
@@ -21,7 +24,7 @@ const Profile = () => {
 
   const handleOpenChatroom = async () => {
     if (user) {
-      const chatroom = user.chatrooms?.find(
+      const chatroom = chatrooms?.find(
         (chatroom) =>
           chatroom.participants.some((userId) => userId === userProfileId) &&
           chatroom.participants.length === 2,
