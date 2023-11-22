@@ -1,5 +1,3 @@
-import api from "../../utils/api";
-import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import useChatroomsStore from "../../zustand/ChatroomsStore";

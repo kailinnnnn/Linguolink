@@ -1,4 +1,4 @@
-import api from "../../utils/api";
+import api from "../../utils/firebaseApi";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";

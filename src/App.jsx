@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import api from "./utils/api";
+import api from "./utils/firebaseApi";
 import { useEffect } from "react";
 import Sidebar from "./component/Sidebar";
 import useAuthStore from "./zustand/AuthStore";

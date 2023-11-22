@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import api from "../../utils/api";
+import api from "../../utils/firebaseApi";
 
 const Community = () => {
   const [users, setUsers] = useState([]);

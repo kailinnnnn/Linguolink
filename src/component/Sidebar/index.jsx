@@ -10,7 +10,7 @@ const Header = () => {
         <i className={`fa-solid fa-user ${iconStyles}`}></i>
       </Link>
       <Link className={LinkStyles} to={`/community`}>
-        <i className={`fa-solid fa-user-group ${iconStyles}`}></i>
+        <i className={`fa-solid fa-globe ${iconStyles}`}></i>
       </Link>
       <Link className={LinkStyles}>
         <i

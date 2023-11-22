@@ -22,6 +22,8 @@ import {
   arrayRemove,
   serverTimestamp,
 } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { v4 as uuidv4 } from "uuid";
 
 const firebaseConfig = {
   apiKey: "AIzaSyANqrKFKCcw703az118cdvb3zSRZxvD12s",
@@ -36,6 +38,8 @@ const provider = new GoogleAuthProvider();
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth();
+const storage = getStorage();
+const storageRef = ref(storage);
 
 const api = {
   //要把登入與註冊的api分開，然後要抓userid
@@ -97,27 +101,6 @@ const api = {
       const docSnap = await getDoc(userRef);
       const userData = docSnap.data();
       userData.id = docSnap.id;
-      // const chatrooms = userData?.chatrooms;
-      // const chatroomsData = chatrooms
-      //   ? await Promise.all(
-      //       chatrooms.map(async (chatroom) => {
-      //         const chatroomRef = doc(db, "chatrooms", chatroom.id);
-      //         const chatroomSnapshot = await getDoc(chatroomRef);
-      //         if (chatroomSnapshot.exists()) {
-      //           const chatroomData = chatroomSnapshot.data();
-      //           return {
-      //             ...chatroomData,
-      //             participants: chatroom.participants,
-      //             id: chatroomSnapshot.id,
-      //           };
-      //         } else {
-      //           return null;
-      //         }
-      //       }),
-      //     )
-      //   : [];
-      // userData.chatrooms = chatroomsData;
-      // 返回包含用户ID的对象
       return userData;
     } catch (error) {
       console.log(error);
@@ -258,7 +241,17 @@ const api = {
       throw error;
     }
   },
-  async sendMessage(chatroomId, userId, targetUserId, content) {
+  async sendMessage(
+    chatroomId,
+    userId,
+    targetUserId,
+    content,
+    toReviseSent,
+    revised,
+    comment,
+    imageUrl,
+    recordUrl,
+  ) {
     try {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
 
@@ -267,6 +260,11 @@ const api = {
           content: content,
           sender: userId,
           createdAt: new Date(),
+          toReviseSent: toReviseSent ? toReviseSent : null,
+          revised: revised ? revised : null,
+          comment: comment ? comment : null,
+          imageUrl: imageUrl ? imageUrl : null,
+          recordUrl: recordUrl ? recordUrl : null,
         }),
       });
       const userChatroomsRef = collection(db, "users", userId, "chatrooms");
@@ -288,6 +286,11 @@ const api = {
           content: content,
           sender: userId,
           createdAt: new Date(),
+          toReviseSent: toReviseSent ? toReviseSent : null,
+          revised: revised ? revised : null,
+          comment: comment ? comment : null,
+          imageUrl: imageUrl ? imageUrl : null,
+          recordUrl: recordUrl ? recordUrl : null,
         }),
       });
       const targetUserChatroomsRef = collection(
@@ -316,6 +319,11 @@ const api = {
           content: content,
           sender: userId,
           createdAt: new Date(),
+          toReviseSent: toReviseSent ? toReviseSent : null,
+          revised: revised ? revised : null,
+          comment: comment ? comment : null,
+          imageUrl: imageUrl ? imageUrl : null,
+          recordUrl: recordUrl ? recordUrl : null,
         }),
       });
     } catch (error) {
@@ -334,6 +342,40 @@ const api = {
         callback(chatroomData);
       });
       return unsubscribe;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async addUserRevised(
+    targetUserId,
+    wrongSentence,
+    correctedSentence,
+    chatroomId,
+  ) {
+    try {
+      const userRef = doc(db, "users", targetUserId);
+      const revised = {
+        wrongSentence: wrongSentence,
+        correctedSentence: correctedSentence,
+        chatroomId: chatroomId,
+      };
+      await updateDoc(userRef, {
+        revised: arrayUnion(revised),
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async uploadFile(file) {
+    try {
+      const storageRef = ref(storage, uuidv4());
+      const a = await uploadBytes(storageRef, file);
+      console.log(a);
+      const url = await getDownloadURL(storageRef);
+      console.log(url);
+      return url;
     } catch (error) {
       console.log(error);
       throw error;
