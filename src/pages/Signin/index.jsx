@@ -39,7 +39,7 @@ const Signin = () => {
   return (
     <>
       {!user ? (
-        <div className="flex flex-col items-center">
+        <div className="ml-28 flex flex-col items-center">
           <div className="mb-4">
             <label htmlFor="email" className="mr-2">
               帳號
@@ -71,7 +71,7 @@ const Signin = () => {
             登入
           </button>
           <button onClick={handleGoogleLogin} className="flex items-center">
-            <img className=" h-12 w-12" src="/src/pages/Signin/google.png" />
+            <img className=" h-12 w-12" src="/google.png" />
             Login with Google
           </button>
           <div>
@@ -80,11 +80,11 @@ const Signin = () => {
           </div>
         </div>
       ) : (
-        <p>{user.name}</p>
+        <p className="ml-28 ">{user.name}</p>
       )}
 
       {isRegistering && (
-        <div>
+        <div className="ml-28 ">
           註冊帳密名
           <input type="text" className="border border-black" ref={emailRef} />
           <input

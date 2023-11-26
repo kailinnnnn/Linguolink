@@ -14,9 +14,7 @@ const Profile = () => {
   const navigate = useNavigate();
   useEffect(() => {
     async function getUser() {
-      console.log(userProfileId);
       const response = await api.getUser(userProfileId);
-      console.log(response);
       setUserProfileData(response);
     }
     getUser();
@@ -29,18 +27,13 @@ const Profile = () => {
           chatroom.participants.some((userId) => userId === userProfileId) &&
           chatroom.participants.length === 2,
       );
-      console.log(chatroom);
       const chatroomId = chatroom ? chatroom.id : null;
       if (chatroomId) {
-        console.log(1);
         navigate(`/chatrooms/${chatroomId}`);
       } else {
-        console.log(2);
-
         const response = await api.createChatroom(user.id, userProfileId);
         const updatedUser = await api.getUser(user.id);
         setUser(updatedUser);
-        console.log(response);
         navigate(`/chatrooms/${response}`);
       }
     } else {
@@ -51,7 +44,7 @@ const Profile = () => {
 
   return (
     userProfileData && (
-      <div>
+      <div className="ml-28 ">
         <p>{userProfileData.name}</p>
         <p>{userProfileData.email}</p>
         <button className={buttonStyles} onClick={handleOpenChatroom}>
@@ -61,10 +54,5 @@ const Profile = () => {
     )
   );
 };
-//按下icon 會觸發點擊事件
-//該事件會
-//查看使用者資料中有沒有與該用戶的聊天室
-//如果沒有就呼叫api創建一個新的聊天室 並返回聊天室id及轉到該聊天室
-//如果有就直接轉到該聊天室
 
 export default Profile;

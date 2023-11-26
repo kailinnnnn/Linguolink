@@ -14,12 +14,10 @@ import {
   doc,
   getDocs,
   getDoc,
-  query,
-  where,
+  deleteDoc,
   updateDoc,
   onSnapshot,
   arrayUnion,
-  arrayRemove,
   serverTimestamp,
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -42,7 +40,6 @@ const storage = getStorage();
 const storageRef = ref(storage);
 
 const api = {
-  //要把登入與註冊的api分開，然後要抓userid
   async loginWithGoogle() {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -88,7 +85,6 @@ const api = {
       throw error;
     }
   },
-
   async nativeSignin(email, password) {
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -107,7 +103,6 @@ const api = {
       throw error;
     }
   },
-
   async getAllUsers() {
     try {
       const userCol = collection(db, "users");
@@ -149,23 +144,29 @@ const api = {
       });
 
       const newChatroomId = newChatroomRef.id;
-      const userChatroomsRef = collection(db, "users", userId, "chatrooms");
-      await addDoc(userChatroomsRef, {
-        id: newChatroomId,
+
+      const userChatroomsRef = doc(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        newChatroomId,
+      );
+      await setDoc(userChatroomsRef, {
         participants: [userId, targetUserId],
         createBy: userId,
         createdAt: serverTimestamp(),
         messages: [],
       });
 
-      const targetUserChatroomsRef = collection(
+      const targetUserChatroomsRef = doc(
         db,
         "users",
         targetUserId,
         "chatrooms",
+        newChatroomId,
       );
-      await addDoc(targetUserChatroomsRef, {
-        id: newChatroomId,
+      await setDoc(targetUserChatroomsRef, {
         participants: [userId, targetUserId],
         createBy: userId,
         createdAt: serverTimestamp(),
@@ -177,11 +178,12 @@ const api = {
       throw error;
     }
   },
-
-  //Listen to the user's chatrooms sub-collection
+  /*
+  為什麼不能這樣寫？
   async listenChatrooms(userId, callback) {
     const userChatroomsRef = collection(db, "users", userId, "chatrooms");
-    const unsubscribe = onSnapshot(userChatroomsRef, (querySnapshot) => {
+    return onSnapshot(userChatroomsRef, (querySnapshot) => {
+      console.log("Monitoring chatrooms");
       const userChatrooms = querySnapshot.docs.map((doc) => {
         return {
           id: doc.id,
@@ -190,45 +192,55 @@ const api = {
       });
       callback(userChatrooms);
     });
-
-    return unsubscribe;
+  },*/
+  async listenChatrooms(userId, callback) {
+    const userChatroomsRef = collection(db, "users", userId, "chatrooms");
+    const unsubChatrooms = onSnapshot(userChatroomsRef, (querySnapshot) => {
+      const userChatrooms = querySnapshot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          ...doc.data(),
+        };
+      });
+      callback(userChatrooms);
+    });
+    return unsubChatrooms;
   },
 
-  // async getChatrooms(userId) {
-  //   try {
-  //     const userRef = doc(db, "user", userId);
-  //     const userSnap = await getDoc(userRef);
-  //     const userData = userSnap.data();
-  //     userData.id = userSnap.id;
-  //     return userData.chatrooms;
-  //   } catch (error) {
-  //     console.log(error);
-  //     throw error;
-  //   }
-  // },
-  // async listenChatrooms(userId, callback) {
-  //   try {
-  //     const q = query(
-  //       collection(db, "chatroom"),
-  //       where("participants", "array-contains", userId),
-  //     );
-  //     const userRef = doc(db, "user", userId);
-  //     const userSnap = await getDoc(userRef);
-  //     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-  //       const chatrooms = querySnapshot.docs.map((doc) => {
-  //         return {
-  //           id: doc.id,
-  //           ...doc.data(),
-  //         };
-  //       });
-  //       callback(chatrooms);
-  //     });
-  //     return unsubscribe;
-  //   } catch (error) {
-  //     console.log(error);
-  //     throw error;
-  //   }
-  // },
+  async listenWebRTC(userId, callback) {
+    const userChatroomsRef = collection(db, "users", userId, "chatrooms");
+    const unsubWebRTCsArr = [];
+    console.log(userChatroomsRef);
+    const unsubChatrooms = onSnapshot(
+      userChatroomsRef,
+      async (querySnapshot) => {
+        console.log("trigger Chatrooms monitor"); // webrtc有新寫入時，不會console.log(1)，得證子集和變化不會觸發母集的onSnapshot
+
+        querySnapshot.docs.map(async (doc) => {
+          const webRTCRef = collection(doc.ref, "webrtc");
+
+          const unsubWebRTC = onSnapshot(webRTCRef, (webRtcSnapshot) => {
+            console.log("trigger WebRTC monitor");
+            const chatroomWebRTCData = {};
+            webRtcSnapshot.forEach((doc) => {
+              chatroomWebRTCData[doc.id] = doc.data();
+            });
+            if (JSON.stringify(chatroomWebRTCData) !== "{}") {
+              callback([chatroomWebRTCData]);
+            }
+
+            unsubWebRTCsArr.push(unsubWebRTC);
+          });
+        });
+      },
+    );
+
+    return () => {
+      unsubChatrooms;
+      unsubWebRTCsArr.forEach((unsubWebRTC) => unsubWebRTC);
+    };
+  },
+
   async getChatroom(id) {
     try {
       const chatroomRef = doc(db, "chatroom", id);
@@ -267,20 +279,8 @@ const api = {
           recordUrl: recordUrl ? recordUrl : null,
         }),
       });
-      const userChatroomsRef = collection(db, "users", userId, "chatrooms");
-      const queryUserChatroomsRef = query(
-        userChatroomsRef,
-        where("id", "==", chatroomId),
-      );
-      const queryUserChatroomsSnapshot = await getDocs(queryUserChatroomsRef);
-      const userChatroomDoc = queryUserChatroomsSnapshot.docs[0];
-      const userChatroomRef = doc(
-        db,
-        "users",
-        userId,
-        "chatrooms",
-        userChatroomDoc.ref.id,
-      );
+      const userChatroomRef = doc(db, "users", userId, "chatrooms", chatroomId);
+
       await updateDoc(userChatroomRef, {
         messages: arrayUnion({
           content: content,
@@ -293,27 +293,14 @@ const api = {
           recordUrl: recordUrl ? recordUrl : null,
         }),
       });
-      const targetUserChatroomsRef = collection(
-        db,
-        "users",
-        targetUserId,
-        "chatrooms",
-      );
-      const querytargetUserChatroomsRef = query(
-        targetUserChatroomsRef,
-        where("id", "==", chatroomId),
-      );
-      const querytargetUserChatroomsSnapshot = await getDocs(
-        querytargetUserChatroomsRef,
-      );
-      const targetUserChatroomDoc = querytargetUserChatroomsSnapshot.docs[0];
       const targetUserChatroomRef = doc(
         db,
         "users",
         targetUserId,
         "chatrooms",
-        targetUserChatroomDoc.ref.id,
+        chatroomId,
       );
+
       await updateDoc(targetUserChatroomRef, {
         messages: arrayUnion({
           content: content,
@@ -331,8 +318,6 @@ const api = {
       throw error;
     }
   },
-
-  //監聽聊天室資料庫
   async listenChatroom(chatroomId, callback) {
     try {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
@@ -376,6 +361,228 @@ const api = {
       const url = await getDownloadURL(storageRef);
       console.log(url);
       return url;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+
+  async sendIceCandidateToRemote(chatroomId, userId, targetUserId, candidate) {
+    const serializeIceCandidate = candidate.toJSON();
+    console.log(serializeIceCandidate);
+    try {
+      const chatroomsColIceCandidatesRef = doc(
+        db,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "iceCandidates",
+      );
+
+      await setDoc(
+        chatroomsColIceCandidatesRef,
+        { serializeIceCandidate, userId },
+        { merge: true },
+      );
+
+      const userColIceCandidatesRef = doc(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "iceCandidates",
+      );
+      await setDoc(
+        userColIceCandidatesRef,
+        { serializeIceCandidate, userId },
+        { merge: true },
+      );
+
+      const targetUserIdColIceCandidatesRef = doc(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "iceCandidates",
+      );
+      await setDoc(
+        targetUserIdColIceCandidatesRef,
+        { serializeIceCandidate, userId },
+        { merge: true },
+      );
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+
+  async onRemoteIceCandidate(chatroomId, callback) {
+    try {
+      const iceCandidatesRef = doc(
+        db,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "iceCandidates",
+      );
+      const unsubscribe = onSnapshot(iceCandidatesRef, (querySnapshot) => {
+        querySnapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            callback(change.doc.data());
+            //這邊不用辨認對方的id，因為只有一個聊天室，所以只要有新增就是對方的
+          }
+        });
+      });
+      return unsubscribe;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async onRemoteOffer(chatroomId, callback) {
+    const chatroomRef = doc(db, "chatrooms", chatroomId);
+    try {
+      const unsubscribe = onSnapshot(chatroomRef, (querySnapshot) => {
+        querySnapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            callback(change.doc.data());
+          }
+        });
+      });
+      return unsubscribe;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+
+  async sendOffer(chatroomId, userId, targetUserId, offer) {
+    try {
+      const offerData = offer.toJSON();
+      const chatroomsColOfferRef = doc(
+        db,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "offer",
+      );
+      await setDoc(chatroomsColOfferRef, offerData, { merge: true });
+      const userColOfferRef = doc(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "offer",
+      );
+      await setDoc(userColOfferRef, offerData, { merge: true });
+      const targetUserColOfferRef = doc(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "offer",
+      );
+      await setDoc(targetUserColOfferRef, offerData, { merge: true });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async sendAnswer(chatroomId, userId, targetUserId, answer) {
+    try {
+      const answerData = answer.toJSON();
+      const chatroomsColAnswerRef = doc(
+        db,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "answer",
+      );
+      await setDoc(chatroomsColAnswerRef, answerData, { merge: true });
+      const userColAnswerRef = doc(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "answer",
+      );
+      await setDoc(userColAnswerRef, answerData, { merge: true });
+      const targetUserColAnswerRef = doc(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "answer",
+      );
+      await setDoc(targetUserColAnswerRef, answerData, { merge: true });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async onRemoteAnswer(chatroomId, callback) {
+    const chatroomRef = doc(db, "chatrooms", chatroomId);
+    try {
+      const unsubscribe = onSnapshot(chatroomRef, (querySnapshot) => {
+        querySnapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            callback(change.doc.data());
+          }
+        });
+      });
+      return unsubscribe;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async deleteWebRTCData(chatroomId, userId, targetUserId) {
+    try {
+      const chatroomsColRef = collection(db, "chatrooms", chatroomId, "webrtc");
+      getDocs(chatroomsColRef).then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          deleteDoc(doc.ref);
+        });
+      });
+
+      const usersColRef = collection(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+      );
+      getDocs(usersColRef).then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          deleteDoc(doc.ref);
+        });
+      });
+      const targetUsersColRef = collection(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+      );
+      getDocs(targetUsersColRef).then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          deleteDoc(doc.ref);
+        });
+      });
     } catch (error) {
       console.log(error);
       throw error;

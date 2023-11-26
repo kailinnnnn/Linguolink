@@ -6,7 +6,7 @@ const MessageList = () => {
   const { chatrooms } = useChatroomsStore();
 
   return (
-    <div className="flex w-28 flex-col items-center gap-4  p-6 ">
+    <div className="fixed flex w-28 flex-col items-center  gap-4 p-6 ">
       Chats
       {chatrooms &&
         chatrooms.map((chatroom, index) => {

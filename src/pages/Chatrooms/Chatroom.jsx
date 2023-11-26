@@ -2,12 +2,14 @@ import api from "../../utils/firebaseApi";
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
-import nlp from "compromise";
+import useWebRTCStore from "../../zustand/webRTCStore";
 import Record from "./Record";
+import Video from "./Video";
 
 const Chatroom = () => {
   const chatroomId = useParams().id;
   const { user } = useAuthStore();
+  const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
   const [chatroomData, setChatroomData] = useState(null);
   const [chatPartner, setChatPartner] = useState(null);
   const [isMenuOpenArray, setIsMenuOpenArray] = useState(
@@ -18,11 +20,13 @@ const Chatroom = () => {
   const [wordListOpen, setWordListOpen] = useState(false);
   const [wordList, setWordList] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const messageRef = useRef();
   const revisedRef = useRef();
   const commentRef = useRef();
   const toReviseSentRef = useRef();
   const fileInputRef = useRef(null);
+  const userVideoRoleRef = useRef("answer");
 
   useEffect(() => {
     const unsubChatroom = api.listenChatroom(chatroomId, (chatroomData) => {
@@ -35,17 +39,23 @@ const Chatroom = () => {
   }, [chatroomId]);
 
   useEffect(() => {
-    console.log(user);
     if (chatroomData) {
       const chatPartnerId = chatroomData.participants.find(
         (participantId) => participantId !== user.id,
       );
       api.getUser(chatPartnerId).then((chatPartner) => {
         setChatPartner(chatPartner);
-        console.log(chatPartner);
       });
     }
   }, [chatroomData]);
+
+  // useEffect(() => {
+  //   if (user) {
+  //     if (webRTCInfo[0]&&) {
+  //       setIsVideoOpen(true);
+  //     }
+  //   }
+  // }, [webRTCInfo]);
 
   const handleSendMessage = async () => {
     await api.sendMessage(
@@ -58,7 +68,6 @@ const Chatroom = () => {
       commentRef.current?.value,
     );
   };
-
   const handleReviseMessage = async () => {
     await api.addUserRevised(
       chatPartner.id,
@@ -67,7 +76,6 @@ const Chatroom = () => {
       chatroomId,
     );
   };
-
   const handleFileUpload = () => {
     const selectedFile = fileInputRef.current.files[0];
     //先存進storage獲取url後 再呼叫sendMessage把url存進資料庫
@@ -84,7 +92,6 @@ const Chatroom = () => {
       );
     });
   };
-
   const handleSaveWord = (message) => {
     console.log(message);
     const doc = nlp(
@@ -94,22 +101,48 @@ const Chatroom = () => {
     const words = doc.terms().out("array");
     console.log(words);
   };
+  const handleVideoCall = async () => {
+    setIsVideoOpen(!isVideoOpen);
+    userVideoRoleRef.current = "offer";
+  };
+
+  useEffect(() => {
+    console.log(userVideoRoleRef.current);
+    if (
+      userVideoRoleRef.current === "answer" &&
+      webRTCInfo?.[0]?.offer &&
+      !webRTCInfo?.[0]?.answer
+    ) {
+      setIsVideoOpen(!isVideoOpen);
+    }
+  }, [webRTCInfo]);
 
   return (
-    <div className="h-full w-full">
-      <header className="fixed top-0 flex max-w-full">
-        {chatPartner && <p className="mr-auto block">{chatPartner.name}</p>}{" "}
+    <div className="ml-28 h-full w-full ">
+      <header className="fixed top-0 z-10 flex w-4/5 max-w-full bg-white">
+        {chatPartner && <p className="mr-auto block ">{chatPartner.name}</p>}{" "}
         <button className="bg-gray-500">
           <i className="fa-solid fa-phone text-xl text-white"></i>
         </button>
-        <button className="bg-gray-500">
-          <i className="fa-solid fa-video text-xl text-white"></i>
-        </button>
+        {!isVideoOpen && (
+          <button className="bg-gray-500" onClick={handleVideoCall}>
+            <i className="fa-solid fa-video text-xl text-white"></i>
+          </button>
+        )}
+        {isVideoOpen && (
+          <Video
+            chatroomId={chatroomId}
+            chatPartner={chatPartner}
+            userVideoRoleRef={userVideoRoleRef}
+            setIsVideoOpen={setIsVideoOpen}
+            isVideoOpen={isVideoOpen}
+          />
+        )}
         <button className="bg-gray-500">
           <i className="fa-solid  fa-ellipsis-vertical text-xl text-white"></i>
         </button>
       </header>
-      <div className="w-full">
+      <div className="mb-20 mt-20 w-full">
         {chatroomData &&
           chatroomData.messages.map((message, index) => {
             const isCurrentUser = message.sender === user.id;
@@ -215,7 +248,7 @@ const Chatroom = () => {
               }
             </p>
             <div>
-              <input type="text" ref={commentRef} />
+              <input type="text" ref={commentRef} className="mb-24" />
               <button
                 onClick={() => {
                   handleSendMessage();
@@ -228,7 +261,7 @@ const Chatroom = () => {
         )}
         {wordListOpen && <div></div>}
       </div>
-      <footer className="fixed bottom-0 mt-10 flex  items-center">
+      <footer className="fixed bottom-0 mt-10 flex  w-4/5 items-center bg-white">
         <Record chatroomId={chatroomId} chatPartner={chatPartner} />
 
         <button className="bg-gray-500">

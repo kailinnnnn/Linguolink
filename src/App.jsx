@@ -4,14 +4,16 @@ import { useEffect } from "react";
 import Sidebar from "./component/Sidebar";
 import useAuthStore from "./zustand/AuthStore";
 import useChatroomsStore from "./zustand/ChatroomsStore";
+import useWebRTCStore from "./zustand/webRTCStore";
+
 function App() {
   const { user } = useAuthStore();
-  const { chatrooms, setChatrooms } = useChatroomsStore();
+  const { setChatrooms } = useChatroomsStore();
+  const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
+
   useEffect(() => {
-    console.log(user);
     if (user) {
       const unsubChatrooms = api.listenChatrooms(user.id, (chatrooms) => {
-        console.log(chatrooms);
         setChatrooms(chatrooms);
       });
 
@@ -22,8 +24,21 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    console.log(chatrooms);
-  }, [chatrooms]);
+    if (user) {
+      const unsubChatrooms = api.listenWebRTC(user.id, (webRTCData) => {
+        setWebRTCInfo(webRTCData);
+      });
+
+      return () => {
+        unsubChatrooms();
+        unsubWebRTC();
+      };
+    }
+  }, [user]);
+
+  useEffect(() => {
+    console.log(webRTCInfo);
+  }, [webRTCInfo]);
 
   return (
     <div className="flex min-h-screen bg-gray-100">

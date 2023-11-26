@@ -57,7 +57,6 @@ const Record = ({ chatPartner, chatroomId }) => {
 
     if (stream) {
       const tracks = stream.getTracks();
-      console.log(tracks);
       tracks.forEach((track) => track.stop());
     }
   };
@@ -65,7 +64,6 @@ const Record = ({ chatPartner, chatroomId }) => {
   const handleSubmit = () => {
     stopRecording();
     const blob = recordedBlobRef.current;
-    console.log(blob);
     if (!blob) {
       return;
     }
@@ -84,11 +82,6 @@ const Record = ({ chatPartner, chatroomId }) => {
       );
     });
   };
-
-  useEffect(() => {
-    console.log(recordedTime);
-    console.log(mediaRecorderRef.current);
-  });
 
   return (
     <div>

@@ -13,13 +13,13 @@ const Community = () => {
     getAllUsers();
   }, []);
   return (
-    <div>
+    <div className="ml-28 ">
       {users &&
         users.map((user, index) => {
           return (
             <Link
               key={index}
-              to={`/user/${user.userId}`}
+              to={`/profile/${user.userId}`}
               state={{ userData: user.userData }}
             >
               <p>{user.userData.name}</p>

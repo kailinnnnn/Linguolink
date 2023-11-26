@@ -4,7 +4,7 @@ import Chatroom from "./Chatroom";
 const Chatrooms = () => {
   //處理非聊天室成員禁止訪問聊天室
   return (
-    <div className="flex w-full">
+    <div className="ml-28 flex w-full ">
       <MessageList />
       <Chatroom />
     </div>
