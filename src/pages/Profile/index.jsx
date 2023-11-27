@@ -1,115 +1,57 @@
-import api from "../../utils/api";
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import api from "../../utils/firebaseApi";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
+import useChatroomsStore from "../../zustand/ChatroomsStore";
 
+const buttonStyles = "rounded-full bg-gray-300 w-8 h-8";
 const Profile = () => {
+  const userProfileId = useParams().id;
   const { setUser, logout, user } = useAuthStore();
-  const [isRegistering, setRegistering] = useState(false);
+  const { chatrooms, setChatrooms } = useChatroomsStore();
+  const [userProfileData, setUserProfileData] = useState({});
+
   const navigate = useNavigate();
-  const emailRef = useRef();
-  const passwordRef = useRef();
-  const nameRef = useRef();
+  useEffect(() => {
+    async function getUser() {
+      const response = await api.getUser(userProfileId);
+      setUserProfileData(response);
+    }
+    getUser();
+  }, []);
 
-  const handleGoogleLogin = async function () {
-    const user = await api.loginWithGoogle();
-    setUser(user);
-    console.log(user);
-    navigate("/");
-  };
-
-  const handleNativeLogin = async () => {
-    const user = await api.nativeSignin(
-      emailRef.current.value,
-      passwordRef.current.value,
-    );
-    setUser(user);
-  };
-
-  const handleNativeRegister = () => {
-    console.log(emailRef.current.value, passwordRef.current.value);
-    api.nativeRegister(
-      emailRef.current.value,
-      passwordRef.current.value,
-      nameRef.current.value,
-    );
+  const handleOpenChatroom = async () => {
+    if (user) {
+      const chatroom = chatrooms?.find(
+        (chatroom) =>
+          chatroom.participants.some((userId) => userId === userProfileId) &&
+          chatroom.participants.length === 2,
+      );
+      const chatroomId = chatroom ? chatroom.id : null;
+      if (chatroomId) {
+        navigate(`/chatrooms/${chatroomId}`);
+      } else {
+        const response = await api.createChatroom(user.id, userProfileId);
+        const updatedUser = await api.getUser(user.id);
+        setUser(updatedUser);
+        navigate(`/chatrooms/${response}`);
+      }
+    } else {
+      alert("請先登入");
+      navigate(`/signin`);
+    }
   };
 
   return (
-    <>
-      {!user ? (
-        <div className="flex flex-col items-center">
-          <div className="mb-4">
-            <label htmlFor="email" className="mr-2">
-              帳號
-            </label>
-            <input
-              type="text"
-              id="email"
-              className="border-2 p-1"
-              ref={emailRef}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="password" className="mr-2">
-              密碼
-            </label>
-            <input
-              type="text"
-              id="password"
-              className="border-2 p-1"
-              ref={passwordRef}
-            />
-          </div>
-
-          <button
-            onClick={handleNativeLogin}
-            className="w-56 bg-gray-300 px-4 py-2"
-          >
-            登入
-          </button>
-          <button onClick={handleGoogleLogin} className="flex items-center">
-            <img className=" h-12 w-12" src="/src/pages/Profile/google.png" />
-            Login with Google
-          </button>
-          <div>
-            還沒有帳號嗎？
-            <button onClick={() => setRegistering(true)}>註冊</button>
-          </div>
-        </div>
-      ) : (
-        <p>{user.name}</p>
-      )}
-
-      {isRegistering && (
-        <div>
-          註冊帳密名
-          <input type="text" className="border border-black" ref={emailRef} />
-          <input
-            type="text"
-            className="border border-black"
-            ref={passwordRef}
-          />
-          <input type="text" className="border border-black" ref={nameRef} />
-          <input
-            name="birthdate"
-            type="date"
-            min="1930-01-01"
-            max={new Date().toISOString().split("T")[0]}
-          />
-          <select name="" id="">
-            <option>Beginner"</option>
-            <option>Intermediate</option> <option>Advanced</option>
-          </select>
-          <button onClick={handleNativeRegister}>Submit</button>
-          <div>
-            有帳號了嗎？
-            <button onClick={() => setRegistering(false)}>登入</button>
-          </div>
-        </div>
-      )}
-    </>
+    userProfileData && (
+      <div className="ml-28 ">
+        <p>{userProfileData.name}</p>
+        <p>{userProfileData.email}</p>
+        <button className={buttonStyles} onClick={handleOpenChatroom}>
+          <i className="fa-solid fa-comment text-xl text-white"></i>
+        </button>
+      </div>
+    )
   );
 };
 
