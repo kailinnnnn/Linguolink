@@ -17,8 +17,7 @@ const Chatroom = () => {
   );
   const [isReviseOpen, setIsReviseOpen] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
-  const [wordListOpen, setWordListOpen] = useState(false);
-  const [wordList, setWordList] = useState([]);
+  const [isSaveWordOpen, setIsSaveWordOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const messageRef = useRef();
@@ -27,6 +26,8 @@ const Chatroom = () => {
   const toReviseSentRef = useRef();
   const fileInputRef = useRef(null);
   const userVideoRoleRef = useRef("answer");
+  const preStoredWordsRef = useRef(null);
+  const noteRef = useRef(null);
 
   useEffect(() => {
     const unsubChatroom = api.listenChatroom(chatroomId, (chatroomData) => {
@@ -49,13 +50,17 @@ const Chatroom = () => {
     }
   }, [chatroomData]);
 
-  // useEffect(() => {
-  //   if (user) {
-  //     if (webRTCInfo[0]&&) {
-  //       setIsVideoOpen(true);
-  //     }
-  //   }
-  // }, [webRTCInfo]);
+  useEffect(() => {
+    console.log(userVideoRoleRef.current);
+    if (
+      userVideoRoleRef.current === "answer" &&
+      webRTCInfo?.[0]?.offer &&
+      !webRTCInfo?.[0]?.answer
+    ) {
+      console.log(" setIsVideoOpen(true)");
+      setIsVideoOpen(true);
+    }
+  }, [webRTCInfo]);
 
   const handleSendMessage = async () => {
     await api.sendMessage(
@@ -92,30 +97,21 @@ const Chatroom = () => {
       );
     });
   };
-  const handleSaveWord = (message) => {
-    console.log(message);
-    const doc = nlp(
-      "たくさんの場所に行ったことがありますが、一番印象に残っている場所はどこですか?",
-    );
-    console.log(doc);
-    const words = doc.terms().out("array");
-    console.log(words);
-  };
+
   const handleVideoCall = async () => {
-    setIsVideoOpen(!isVideoOpen);
+    setIsVideoOpen(true);
     userVideoRoleRef.current = "offer";
   };
 
-  useEffect(() => {
-    console.log(userVideoRoleRef.current);
-    if (
-      userVideoRoleRef.current === "answer" &&
-      webRTCInfo?.[0]?.offer &&
-      !webRTCInfo?.[0]?.answer
-    ) {
-      setIsVideoOpen(!isVideoOpen);
-    }
-  }, [webRTCInfo]);
+  const handleSaveWord = () => {
+    console.log(1);
+    setIsSaveWordOpen(!isSaveWordOpen);
+    const word = {
+      word: preStoredWordsRef.current.value,
+      note: noteRef.current.value,
+    };
+    api.storeWord(user.id, word);
+  };
 
   return (
     <div className="ml-28 h-full w-full ">
@@ -182,10 +178,7 @@ const Chatroom = () => {
                         回覆
                       </button>
                       <button
-                        onClick={() => {
-                          console.log(message);
-                          handleSaveWord(message.content);
-                        }}
+                        onClick={() => setIsSaveWordOpen(!isSaveWordOpen)}
                       >
                         儲存單字
                       </button>
@@ -259,7 +252,22 @@ const Chatroom = () => {
             </div>
           </div>
         )}
-        {wordListOpen && <div></div>}
+        {isSaveWordOpen && (
+          <div>
+            <label>
+              <input
+                type="text"
+                defaultValue={selectedMessage?.content}
+                ref={preStoredWordsRef}
+              />
+            </label>
+            <label>
+              備注：
+              <input type="text" ref={noteRef} />
+            </label>
+            <button onClick={handleSaveWord}>Submit</button>
+          </div>
+        )}
       </div>
       <footer className="fixed bottom-0 mt-10 flex  w-4/5 items-center bg-white">
         <Record chatroomId={chatroomId} chatPartner={chatPartner} />

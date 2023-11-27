@@ -366,24 +366,38 @@ const api = {
       throw error;
     }
   },
-
-  async sendIceCandidateToRemote(chatroomId, userId, targetUserId, candidate) {
+  async storeWord(userId, word) {
+    try {
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        saveWords: arrayUnion(word),
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async sendIceCandidateToRemote(
+    chatroomId,
+    userId,
+    targetUserId,
+    candidate,
+    userRole,
+  ) {
     const serializeIceCandidate = candidate.toJSON();
-    console.log(serializeIceCandidate);
+    console.log(serializeIceCandidate, userId);
     try {
       const chatroomsColIceCandidatesRef = doc(
         db,
         "chatrooms",
         chatroomId,
         "webrtc",
-        "iceCandidates",
+        `${userRole}IceCandidates`,
       );
 
-      await setDoc(
-        chatroomsColIceCandidatesRef,
-        { serializeIceCandidate, userId },
-        { merge: true },
-      );
+      await setDoc(chatroomsColIceCandidatesRef, serializeIceCandidate, {
+        merge: true,
+      });
 
       const userColIceCandidatesRef = doc(
         db,
@@ -392,13 +406,11 @@ const api = {
         "chatrooms",
         chatroomId,
         "webrtc",
-        "iceCandidates",
+        `${userRole}IceCandidates`,
       );
-      await setDoc(
-        userColIceCandidatesRef,
-        { serializeIceCandidate, userId },
-        { merge: true },
-      );
+      await setDoc(userColIceCandidatesRef, serializeIceCandidate, {
+        merge: true,
+      });
 
       const targetUserIdColIceCandidatesRef = doc(
         db,
@@ -407,19 +419,16 @@ const api = {
         "chatrooms",
         chatroomId,
         "webrtc",
-        "iceCandidates",
+        `${userRole}IceCandidates`,
       );
-      await setDoc(
-        targetUserIdColIceCandidatesRef,
-        { serializeIceCandidate, userId },
-        { merge: true },
-      );
+      await setDoc(targetUserIdColIceCandidatesRef, serializeIceCandidate, {
+        merge: true,
+      });
     } catch (error) {
       console.log(error);
       throw error;
     }
   },
-
   async onRemoteIceCandidate(chatroomId, callback) {
     try {
       const iceCandidatesRef = doc(
@@ -459,7 +468,6 @@ const api = {
       throw error;
     }
   },
-
   async sendOffer(chatroomId, userId, targetUserId, offer) {
     try {
       const offerData = offer.toJSON();
