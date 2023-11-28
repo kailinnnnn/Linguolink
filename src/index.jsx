@@ -6,6 +6,7 @@ import Signin from "./pages/Signin/index.jsx";
 import Community from "./pages/Community/index.jsx";
 import Profile from "./pages/Profile/index.jsx";
 import Chatrooms from "./pages/Chatrooms/index.jsx";
+import Learning from "./pages/Learning/index.jsx";
 import "./index.css";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <>
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="signin" element={<Signin />} />
           <Route path="community" element={<Community />} />
           <Route path="chatrooms/:id" element={<Chatrooms />} />
+          <Route path="learning" element={<Learning />} />
           <Route path="profile/:id" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
