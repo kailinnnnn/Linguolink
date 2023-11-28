@@ -103,16 +103,14 @@ const api = {
       throw error;
     }
   },
-  async getAllUsers() {
+  async getAllMembers() {
     try {
       const userCol = collection(db, "users");
       const userSnapshot = await getDocs(userCol);
       const userList = userSnapshot.docs.map((doc) => {
-        // 在每个用户数据中包含文档的 ID
-        return {
-          userId: doc.id,
-          userData: doc.data(),
-        };
+        const data = doc.data();
+        data.id = doc.id;
+        return data;
       });
 
       return userList;

@@ -14,11 +14,8 @@ const Header = () => {
       <Link className={LinkStyles} to={`/community`}>
         <i className={`fa-solid fa-globe ${iconStyles}`}></i>
       </Link>
-      <Link className={LinkStyles}>
-        <i
-          className={`fa-solid fa-message ${iconStyles}`}
-          to={`/chatrooms`}
-        ></i>
+      <Link className={LinkStyles} to={`/chatrooms`}>
+        <i className={`fa-solid fa-message ${iconStyles}`}></i>
       </Link>
       <Link className={LinkStyles}>
         <i className={`fa-solid fa-book-open ${iconStyles}`}></i>

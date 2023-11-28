@@ -48,7 +48,7 @@ const Profile = () => {
         <p>{userProfileData.name}</p>
         <p>{userProfileData.email}</p>
         <button className={buttonStyles} onClick={handleOpenChatroom}>
-          <i className="fa-solid fa-comment text-xl text-white"></i>
+          <i className="fa-solid fa-comment text-xl text-white "></i>
         </button>
       </div>
     )
