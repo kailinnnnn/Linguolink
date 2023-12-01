@@ -8,7 +8,6 @@ const Video = ({
   userVideoRoleRef,
   chatPartner,
   setIsVideoOpen,
-  isVideoOpen,
 }) => {
   const { user } = useAuthStore();
   const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
@@ -73,16 +72,23 @@ const Video = ({
             await peerConnection.current.setLocalDescription(offer);
             api.sendOffer(chatroomId, user.id, chatPartner.id, offer);
           }
-          if (webRTCInfo?.[0]?.answer && !webRTCInfo?.[0]?.iceCandidates) {
+          if (
+            webRTCInfo?.[0]?.answer &&
+            !webRTCInfo?.[0]?.answerIceCandidates
+          ) {
             console.log("offerer get remote answer");
             const answer = new RTCSessionDescription(webRTCInfo[0].answer);
             await peerConnection.current.setRemoteDescription(answer);
           }
-          if (webRTCInfo[0]?.answerIceCandidates) {
+          if (
+            webRTCInfo[0]?.answerIceCandidates &&
+            peerConnection.current.iceConnectionState !== "connected"
+          ) {
             // webRTCInfo[0].answerIceCandidates.forEach((candidate) => {
             peerConnection.current.addIceCandidate(
               new RTCIceCandidate(webRTCInfo[0].answerIceCandidates),
             );
+            console.log(peerConnection.current);
             // });
           }
         }
@@ -121,7 +127,9 @@ const Video = ({
 
   const handleEndVideoCall = async () => {
     await api.deleteWebRTCData(chatroomId, user.id, chatPartner.id);
+    setIsVideoOpen(false);
     setWebRTCInfo(null);
+
     peerConnection.current.close();
 
     localStreamRef.current.srcObject
@@ -133,8 +141,6 @@ const Video = ({
       ?.getTracks()
       .forEach((track) => track.stop());
     remoteStreamRef.current.srcObject = null;
-
-    setIsVideoOpen(false);
   };
 
   return (

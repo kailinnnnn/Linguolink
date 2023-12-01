@@ -3,10 +3,18 @@ import { create } from "zustand";
 const useAuthStore = create((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-
-  //   increment: () => set((state) => ({ count: state.count + 1 })),
-  //   decrement: () => set((state) => ({ count: state.count - 1 })),
-  logout: () => set({ user: null }),
+  isLogin: false,
+  setIsLogin: (isLogin) => set({ isLogin }),
+  logout: () => {
+    set({ user: null });
+    set({ isLogin: false });
+    localStorage.removeItem("user");
+  },
+  login: (user) => {
+    set({ user });
+    set({ isLogin: true });
+    localStorage.setItem("user", JSON.stringify(user));
+  },
 }));
 
 export default useAuthStore;

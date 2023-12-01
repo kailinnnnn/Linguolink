@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import { GeoPoint } from "firebase/firestore";
 import {
   collection,
   getFirestore,
@@ -65,7 +66,19 @@ const api = {
       throw error;
     }
   },
-  async nativeRegister(email, password, name) {
+  async nativeRegister(
+    email,
+    password,
+    name,
+    birthdate,
+    location,
+    nativeLanguage,
+    alsoSpeak,
+    learningLanguage,
+    learningLanguageLevel,
+    translate,
+    communicationStyle,
+  ) {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -74,12 +87,37 @@ const api = {
       );
       const uid = userCredential.user.uid;
       const userRef = doc(db, "users", uid);
+      const locationData = new GeoPoint(location.lat, location.lng);
       const userData = {
-        name: name,
-        email: email,
+        name,
+        email,
+        birthdate,
+        location: locationData,
+        nativeLanguage,
+        alsoSpeak,
+        learningLanguage: { learningLanguage, learningLanguageLevel },
+        translate,
+        communicationStyle,
+        aboutMe: {
+          topic: "",
+          partnerQualities: "",
+          goals: "",
+        },
+        photos: [
+          { num: 1, url: "" },
+          { num: 2, url: "" },
+          { num: 3, url: "" },
+          { num: 4, url: "" },
+          { num: 5, url: "" },
+          { num: 6, url: "" },
+        ],
+        profilePicture:
+          "https://firebasestorage.googleapis.com/v0/b/linguolink-e84b0.appspot.com/o/8ef34a64-68fc-4008-93f0-fa293b0ccc3d?alt=media&token=680f3317-8725-4ee1-8144-e07ee99ed410",
+        mainTopic: "",
       };
       await setDoc(userRef, userData);
       console.log("新用戶已成功創建");
+      return { email, password };
     } catch (error) {
       console.error("創建新用戶時發生錯誤", error);
       throw error;
@@ -368,7 +406,7 @@ const api = {
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
-        saveWords: arrayUnion(word),
+        savedWords: arrayUnion(word),
       });
     } catch (error) {
       console.log(error);
@@ -383,7 +421,6 @@ const api = {
     userRole,
   ) {
     const serializeIceCandidate = candidate.toJSON();
-    console.log(serializeIceCandidate, userId);
     try {
       const chatroomsColIceCandidatesRef = doc(
         db,
@@ -589,6 +626,27 @@ const api = {
           deleteDoc(doc.ref);
         });
       });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async uploadUserPhoto(userId, data) {
+    try {
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+      userData.photos[data.num - 1].url = data.url;
+      updateDoc(userRef, userData);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async uploadUserProfilePicture(userId, url) {
+    try {
+      const userRef = doc(db, "users", userId);
+      setDoc(userRef, { profilePicture: url }, { merge: true });
     } catch (error) {
       console.log(error);
       throw error;

@@ -7,7 +7,7 @@ import useChatroomsStore from "./zustand/ChatroomsStore";
 import useWebRTCStore from "./zustand/webRTCStore";
 
 function App() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { setChatrooms } = useChatroomsStore();
   const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
 
@@ -18,7 +18,7 @@ function App() {
       });
 
       return () => {
-        unsubChatrooms();
+        unsubChatrooms;
       };
     }
   }, [user]);
@@ -30,11 +30,15 @@ function App() {
       });
 
       return () => {
-        unsubChatrooms();
-        unsubWebRTC();
+        unsubChatrooms;
       };
     }
   }, [user]);
+
+  useEffect(() => {
+    localStorage.getItem("user") &&
+      setUser(JSON.parse(localStorage.getItem("user")));
+  }, []);
 
   useEffect(() => {
     console.log(webRTCInfo);

@@ -9,29 +9,32 @@ const Learning = () => {
   console.log(user);
 
   return (
-    <div>
+    <div className="ml-28">
       <header>
-        <button onClick={() => setMainState("savedWords")}>更正紀錄</button>
-        <button onClick={() => setMainState("revised")}>單詞片語</button>
+        <button onClick={() => setMainState("savedWords")}>單詞片語</button>
+        <button onClick={() => setMainState("revised")}>更正紀錄</button>
       </header>
       <main>
         {user ? (
-          mainState === "revised" ? (
-            user?.revised?.map((sent) => {
-              <div>
-                <h1>{sent.correctedSentence}</h1>
-                <h2>{sent.wrongSentence}</h2>
-              </div>;
+          mainState === "savedWords" ? (
+            user?.savedWords?.map((word, i) => {
+              console.log(word);
+              return (
+                <div key={i}>
+                  <h1>{word.word}</h1>
+                  <h1>{word.note}</h1>
+                </div>
+              );
             })
-          ) : user.savedWords ? (
-            user.savedWords.map((sent) => {
+          ) : user.revised ? (
+            user.revised.map((sent) => {
               <div>
                 <h1>{sent.correctedSentence}</h1>
                 <h2>{sent.wrongSentence}</h2>
               </div>;
             })
           ) : (
-            <h1>請先儲存單字</h1>
+            <h1>尚未有被修正的句子</h1>
           )
         ) : (
           <h1>請先登入</h1>

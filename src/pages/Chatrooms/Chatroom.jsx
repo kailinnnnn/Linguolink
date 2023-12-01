@@ -35,7 +35,7 @@ const Chatroom = () => {
     });
 
     return () => {
-      unsubChatroom();
+      unsubChatroom;
     };
   }, [chatroomId]);
 
@@ -51,13 +51,11 @@ const Chatroom = () => {
   }, [chatroomData]);
 
   useEffect(() => {
-    console.log(userVideoRoleRef.current);
     if (
       userVideoRoleRef.current === "answer" &&
       webRTCInfo?.[0]?.offer &&
       !webRTCInfo?.[0]?.answer
     ) {
-      console.log(" setIsVideoOpen(true)");
       setIsVideoOpen(true);
     }
   }, [webRTCInfo]);
@@ -104,7 +102,6 @@ const Chatroom = () => {
   };
 
   const handleSaveWord = () => {
-    console.log(1);
     setIsSaveWordOpen(!isSaveWordOpen);
     const word = {
       word: preStoredWordsRef.current.value,
@@ -166,7 +163,7 @@ const Chatroom = () => {
                   )}
                   <p>{message.content}</p>
                   {message.toReviseSent && <p>{message.toReviseSent}</p>}
-                  {message.revised && <p>{message.revised}</p>}
+                  {message.revised && <p>修正{message.revised}</p>}
                   {message.comment && <p>評論{message.comment}</p>}
                   {isMenuOpenArray[index] && (
                     <div className="absolute left-16 z-10 flex w-24 flex-col bg-gray-500 text-slate-200">
@@ -254,6 +251,9 @@ const Chatroom = () => {
         )}
         {isSaveWordOpen && (
           <div>
+            <button onClick={() => setIsSaveWordOpen(!isSaveWordOpen)}>
+              <i className="fa-solid fa-xmark text-gray text-xl"></i>
+            </button>
             <label>
               <input
                 type="text"
