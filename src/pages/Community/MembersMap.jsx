@@ -12,11 +12,6 @@ const containerStyle = {
   height: "100vh",
 };
 
-const center = {
-  lat: -3.745,
-  lng: -38.523,
-};
-
 function MembersMap({ members }) {
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -24,7 +19,8 @@ function MembersMap({ members }) {
   });
   const [map, setMap] = useState(null);
   const onLoad = useCallback(function callback(map) {
-    const bounds = new window.google.maps.LatLngBounds(center);
+    console.log(userCenter);
+    const bounds = new window.google.maps.LatLngBounds(userCenter);
     map.fitBounds(bounds);
 
     setMap(map);
@@ -68,6 +64,7 @@ function MembersMap({ members }) {
         // 在使用地圖 API 之前，檢查 window.google 是否已經定義
         if (window.google && window.google.maps) {
           // 創建 Google 地圖標記實例
+          console.log(member);
           const marker = new window.google.maps.Marker({
             position: { lat: member.location._lat, lng: member.location._long },
             label,
@@ -90,12 +87,12 @@ function MembersMap({ members }) {
     }
   }, [isLoaded, members, markerClusterer]);
 
-  return isLoaded ? (
+  return isLoaded && userCenter ? (
     <div className="-z-10 mt-5">
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={userCenter}
-        zoom={3}
+        zoom={10}
         onLoad={onLoad}
         onUnmount={onUnmount}
       >

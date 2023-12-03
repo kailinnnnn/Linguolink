@@ -169,12 +169,12 @@ const api = {
       throw error;
     }
   },
-  async createChatroom(userId, targetUserId) {
+  async createChatroom(user, targetUser) {
     try {
       const chatroomRef = collection(db, "chatrooms");
       const newChatroomRef = await addDoc(chatroomRef, {
-        participants: [userId, targetUserId],
-        createBy: userId,
+        participants: [user, targetUser],
+        createBy: user.id,
         createdAt: serverTimestamp(),
         messages: [],
       });
@@ -184,13 +184,13 @@ const api = {
       const userChatroomsRef = doc(
         db,
         "users",
-        userId,
+        user.id,
         "chatrooms",
         newChatroomId,
       );
       await setDoc(userChatroomsRef, {
-        participants: [userId, targetUserId],
-        createBy: userId,
+        participants: [user, targetUser],
+        createBy: user.id,
         createdAt: serverTimestamp(),
         messages: [],
       });
@@ -198,13 +198,13 @@ const api = {
       const targetUserChatroomsRef = doc(
         db,
         "users",
-        targetUserId,
+        targetUser.id,
         "chatrooms",
         newChatroomId,
       );
       await setDoc(targetUserChatroomsRef, {
-        participants: [userId, targetUserId],
-        createBy: userId,
+        participants: [user, targetUser],
+        createBy: user.id,
         createdAt: serverTimestamp(),
         messages: [],
       });
@@ -302,10 +302,21 @@ const api = {
   ) {
     try {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
-
+      console.log(1);
+      console.log(
+        chatroomId,
+        userId,
+        targetUserId,
+        content,
+        toReviseSent,
+        revised,
+        comment,
+        imageUrl,
+        recordUrl,
+      );
       await updateDoc(chatroomRef, {
         messages: arrayUnion({
-          content: content,
+          content: content ? content : null,
           sender: userId,
           createdAt: new Date(),
           toReviseSent: toReviseSent ? toReviseSent : null,
@@ -319,7 +330,7 @@ const api = {
 
       await updateDoc(userChatroomRef, {
         messages: arrayUnion({
-          content: content,
+          content: content ? content : null,
           sender: userId,
           createdAt: new Date(),
           toReviseSent: toReviseSent ? toReviseSent : null,
@@ -339,7 +350,7 @@ const api = {
 
       await updateDoc(targetUserChatroomRef, {
         messages: arrayUnion({
-          content: content,
+          content: content ? content : null,
           sender: userId,
           createdAt: new Date(),
           toReviseSent: toReviseSent ? toReviseSent : null,

@@ -5,9 +5,10 @@ import Sidebar from "./component/Sidebar";
 import useAuthStore from "./zustand/AuthStore";
 import useChatroomsStore from "./zustand/ChatroomsStore";
 import useWebRTCStore from "./zustand/webRTCStore";
+import { NextUIProvider } from "@nextui-org/react";
 
 function App() {
-  const { user, setUser } = useAuthStore();
+  const { user, login } = useAuthStore();
   const { setChatrooms } = useChatroomsStore();
   const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
 
@@ -37,7 +38,7 @@ function App() {
 
   useEffect(() => {
     localStorage.getItem("user") &&
-      setUser(JSON.parse(localStorage.getItem("user")));
+      login(JSON.parse(localStorage.getItem("user")));
   }, []);
 
   useEffect(() => {
@@ -45,10 +46,12 @@ function App() {
   }, [webRTCInfo]);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
-      <Outlet />
-    </div>
+    <NextUIProvider>
+      <div className="text-foreground bg-background light flex min-h-screen ">
+        <Sidebar />
+        <Outlet />
+      </div>
+    </NextUIProvider>
   );
 }
 

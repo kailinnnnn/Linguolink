@@ -1,25 +1,25 @@
 import api from "../../utils/firebaseApi";
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import googleMapApi from "../../utils/googleMapApi";
 
 const buttonStyles = "rounded-full bg-gray-300 w-8 h-8";
 const Profile = () => {
   const { logout, user, isLogin, setUser } = useAuthStore();
-  const {
-    id,
-    name,
-    birthdate,
-    location,
-    nativeLanguage,
-    alsoSpeak,
-    learningLanguage,
-    translate,
-    communicationStyle,
-    profilePicture,
-    aboutMe,
-  } = user;
+  // const {
+  //   id,
+  //   name,
+  //   birthdate,
+  //   location,
+  //   nativeLanguage,
+  //   alsoSpeak,
+  //   learningLanguage,
+  //   translate,
+  //   communicationStyle,
+  //   profilePicture,
+  //   aboutMe,
+  // } = user;
   const [selectedCategory, setSelectedCategory] = useState("aboutMe");
   const [locationText, setLocationText] = useState(null);
   const [editingBlock, setEditingBlock] = useState(null);
@@ -31,14 +31,20 @@ const Profile = () => {
   const goalsRef = useRef();
   const photoInputRef = useRef();
   const styleMappings = {
-    meetings: "Meeting Style",
-    textAndVoice: "Text and Voice Style",
-    voiceAndVideo: "Voice and Video Style",
+    meetings: { text: "In-Person Meetings", icon: "fa-solid fa-coffee" },
+    textAndVoice: {
+      text: "Text and Voice Messages",
+      icon: "fa-solid fa-comment",
+    },
+    voiceAndVideo: { text: "Voice or Video Calls", icon: "fa-solid fa-video" },
   };
-
+  const navigate = useNavigate();
   useEffect(() => {
+    if (!user) {
+      alert("Please login first");
+      navigate("/signin");
+    }
     getLocation();
-    console.log(user);
   }, []);
 
   const getLocation = () => {
@@ -47,7 +53,6 @@ const Profile = () => {
       console.log(location);
       setLocationText(location);
     });
-    //處理更改資料庫使用者位置
   };
 
   const handleAddPhoto = (e, index, num) => {
@@ -81,9 +86,8 @@ const Profile = () => {
         <div>
           <img src="" alt="" />
         </div>
-
         <h1>My Profile</h1>
-        <Link to={`community/${id}`}>Preview Profile</Link>
+        <Link to={`community/${user.id}`}>Preview Profile</Link>
         <div />
         <aside>
           <button
@@ -114,14 +118,20 @@ const Profile = () => {
           >
             Topic
           </button>
-          <button className={buttonStyles} onClick={logout}>
+          <button
+            className={buttonStyles}
+            onClick={() => {
+              logout;
+              navigate("/signin");
+            }}
+          >
             Logout
           </button>
         </aside>
         {selectedCategory === "aboutMe" && (
           <div>
             <div>
-              <img src={profilePicture} alt="" className="h-36 w-36" />
+              <img src={user.profilePicture} alt="" className="h-36 w-36" />
               {editingBlock !== "profilePiture" && (
                 <label>
                   <input
@@ -143,7 +153,7 @@ const Profile = () => {
               Name
               <input
                 disabled={editingBlock !== "name"}
-                value={name}
+                value={user.name}
                 ref={nameRef}
               />
               {editingBlock === "name" ? (
@@ -166,7 +176,7 @@ const Profile = () => {
             </div>
 
             <div>
-              LinguoLink ID<p>{id}</p>
+              LinguoLink ID<p>{user.id}</p>
             </div>
 
             <div>
@@ -174,7 +184,7 @@ const Profile = () => {
               <input
                 name="birthdate"
                 type="date"
-                value={birthdate}
+                value={user.birthdate}
                 min="1930-01-01"
                 max={new Date().toISOString().split("T")[0]}
                 disabled={editingBlock !== "birthdate"}
@@ -204,7 +214,7 @@ const Profile = () => {
             <div>
               Location
               {locationText && (
-                <p>{`${locationText.country},${locationText.city}`}</p>
+                <p>{`${user.locationText.country},${user.locationText.city}`}</p>
               )}
               <button onClick={getLocation}>
                 <i className="fa-solid fa-arrow-rotate-right"></i>Update
@@ -310,7 +320,7 @@ const Profile = () => {
                 <i className="fa-solid fa-pen"></i>Edit
               </button>
               <div />
-              <p>{nativeLanguage}</p>
+              <p>{user.nativeLanguage}</p>
             </div>
             <div>
               I can also speak fluently
@@ -318,7 +328,7 @@ const Profile = () => {
                 <i className="fa-solid fa-pen"></i>Edit
               </button>
               <div />
-              <p>{alsoSpeak}</p>
+              <p>{user.alsoSpeak}</p>
             </div>
             <div>
               I am learning
@@ -326,7 +336,7 @@ const Profile = () => {
                 <i className="fa-solid fa-pen"></i>Edit
               </button>
               <div />
-              <p>{learningLanguage}</p>
+              <p>{user.learningLanguage}</p>
             </div>
             <div>
               Translate received messages into
@@ -334,7 +344,7 @@ const Profile = () => {
                 <i className="fa-solid fa-pen"></i>Edit
               </button>
               <div />
-              <p>{translate}</p>
+              <p>{user.translate}</p>
             </div>
           </>
         )}
@@ -346,8 +356,15 @@ const Profile = () => {
                 <i className="fa-solid fa-pen"></i>Edit
               </button>
               <div />
-              {Object.entries(communicationStyle).map(([style, value]) => {
-                return value && <p key={style}>{styleMappings[style]}</p>;
+              {Object.entries(user.communicationStyle).map(([style, value]) => {
+                return (
+                  value && (
+                    <p key={style}>
+                      <i className={styleMappings[style].icon}></i>
+                      {styleMappings[style].text}
+                    </p>
+                  )
+                );
               })}
             </div>
           </>

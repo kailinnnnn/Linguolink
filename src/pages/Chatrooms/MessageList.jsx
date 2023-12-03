@@ -10,12 +10,22 @@ const MessageList = () => {
       Chats
       {chatrooms &&
         chatrooms.map((chatroom, index) => {
+          const chatPartner = chatroom.participants.find(
+            (participant) => participant.id !== user.id,
+          );
           return (
             <Link
               key={index}
               className="h-16 w-16 rounded-full bg-gray-300"
               to={`/chatrooms/${chatroom.id}`}
-            ></Link>
+            >
+              {" "}
+              <img
+                src={chatPartner.profilePicture}
+                alt=""
+                className="fit-cover h-16 w-16 rounded-full"
+              />
+            </Link>
           );
         })}
     </div>
