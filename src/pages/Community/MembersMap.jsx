@@ -8,8 +8,9 @@ import {
 import { isGetAccessor } from "typescript";
 
 const containerStyle = {
-  width: "100vw",
-  height: "100vh",
+  width: "120%",
+  height: "120vh",
+  transform: " scale(1.5)",
 };
 
 function MembersMap({ members }) {
@@ -88,11 +89,11 @@ function MembersMap({ members }) {
   }, [isLoaded, members, markerClusterer]);
 
   return isLoaded && userCenter ? (
-    <div className="-z-10 mt-5">
+    <div className="relative max-h-screen min-w-full overflow-hidden">
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={userCenter}
-        zoom={10}
+        zoom={3}
         onLoad={onLoad}
         onUnmount={onUnmount}
       >
@@ -107,23 +108,52 @@ function MembersMap({ members }) {
         ></MarkerF>
       </GoogleMap>
       {shownMember && (
-        <Link
-          className="z-1000 fixed right-3 top-12 flex h-full w-96 flex-col items-center  bg-white"
-          to={`/community/${shownMember.id}`}
-        >
-          <div className="flex h-36 w-36 items-center justify-center bg-gray-300">
-            <i className={`fa-solid fa-user block text-8xl text-white`}></i>
-          </div>
+        <div className="z-1000 bg-gray100 fixed right-6 top-6 flex h-[calc(100%-3rem)] w-80 flex-col items-center overflow-hidden rounded-2xl p-6">
+          <div className="absolute bottom-0  flex h-[calc(83%)] w-[calc(100%)] flex-col items-center  bg-white p-6 "></div>
+          <div className=" relative z-10 flex h-full flex-col items-center justify-center">
+            <div className="border-5 mr-4 box-content h-36 min-h-fit w-36 min-w-fit overflow-visible rounded-xl border-white">
+              <img
+                src={shownMember.profilePicture}
+                alt=""
+                className="h-36 w-36 rounded-xl object-cover"
+              />
+            </div>
 
-          <h2>{`${shownMember.name},${shownMember.age}`}</h2>
-          <p>{shownMember.description}</p>
-          <Link
-            className="items -center r ounded-full flex h-8 w-8 justify-center bg-gray-300"
-            to={``}
-          >
-            <i className="fa-solid fa-comment text-xl text-white"></i>
-          </Link>
-        </Link>
+            <h2 className="mt-3 text-center text-xl font-semibold text-black">{`${shownMember.name}`}</h2>
+            <div className="border-1 border-gray300  my-3 w-full" />
+            {/* <p className=" mb-1  ">{`${locationText.country},${locationText.city}`}</p> */}
+            <div className="mb-1  mr-auto">
+              <small className="pr-2 text-xs font-semibold">Speak</small>
+              <small className="pr-2 text-xs">
+                {shownMember.nativeLanguage}
+              </small>
+
+              <small className="pr-2 text-xs font-semibold">Learning</small>
+              <small className="pr-2 text-xs">
+                {shownMember.learningLanguage.learningLanguage}
+              </small>
+            </div>
+            {/* <i className="fa-solid fa-quote-right mr-auto flex text-sm "></i> */}
+            <p className="  text-l  mt-1 font-light leading-6">
+              {shownMember.mainTopic}
+            </p>
+
+            <div className="mt-auto flex gap-3">
+              <Link
+                className="bg-purple100 flex h-10 items-center justify-center rounded-xl p-3"
+                to={`/community/${shownMember.id}`}
+              >
+                <i className="fa-solid fa-user text-purple500 text-l pr-2"></i>
+                <p className=" text-purple500 text-l "> Profile</p>
+              </Link>
+
+              <button className="bg-purple100 mt-auto flex h-10 items-center justify-center rounded-xl p-3">
+                <i className="fa-solid fa-comment text-purple500 text-l pr-2"></i>
+                <p className=" text-purple500 text-l "> Message</p>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   ) : (

@@ -45,7 +45,7 @@ const Record = ({ chatPartner, chatroomId, setInputCategory }) => {
 
   const stopRecording = () => {
     setAudioUrl(null);
-    mediaRecorderRef.current.stop();
+    mediaRecorderRef.current?.stop();
     setIsRecording(false);
     setRecordedTime(0);
 
@@ -78,51 +78,56 @@ const Record = ({ chatPartner, chatroomId, setInputCategory }) => {
   };
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full items-center justify-center">
       <button
         onClick={() => {
           stopRecording();
           setInputCategory("message");
         }}
       >
-        <i className="fa-solid fa-xmark text-gray text-xl"></i>
+        <i className="fa-solid fa-xmark  mr-4 text-2xl"></i>
       </button>
       {isRecording ? (
         <>
-          <button className="bg-gray-500" onClick={stopRecording}>
+          <button
+            className="bg-gray500 mr-4  h-10 w-10 rounded-full"
+            onClick={stopRecording}
+          >
             <i className="fa-solid fa-stop text-xl text-white"></i>
           </button>
-          <p className="w-full">In recording, click to stop recording. </p>
+          <p className="text-gray700 w-full  leading-6">
+            In recording, click to stop recording{" "}
+          </p>
         </>
       ) : (
         <>
           <button
-            className="bg-gray-500"
+            className="bg-red500 min-h-10  min-w-10 max-w-10 mr-4 flex h-10 max-h-10 w-10 items-center justify-center rounded-full"
             onClick={() => {
               setAudioUrl(null);
               startRecording();
             }}
           >
-            <i className="fa-solid  fa-circle text-xl text-white"></i>
+            <div className="h-5  w-5 rounded-full bg-white"></div>
           </button>
           {!audioUrl && (
-            <p className="w-full">
-              In holding, start recording. <br />
-              You can listen again before submitting the voice message.
+            <p className="text-gray700 w-full leading-6">
+              In holding, start recording <br />
+              You can listen again before submitting the voice message
             </p>
           )}
           <audio
             src={audioUrl}
             controls={audioUrl !== null}
-            className="h-5 w-full"
+            className="mr-5 h-5 w-full"
           />
         </>
       )}
 
       {/* <p>{recordedTime}</p> */}
 
-      <button onClick={handleSubmit} className="bg-gray-500">
-        <i className="fa-solid fa-paper-plane text-xl text-white"></i>
+      <button onClick={handleSubmit} className="">
+        <i className="fa-solid fa-paper-plane text-purple500 text-xl"></i>
       </button>
     </div>
   );

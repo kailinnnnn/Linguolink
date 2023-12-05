@@ -171,7 +171,7 @@ const Video = ({
   };
 
   return (
-    <div className="relative z-10 ml-28 flex h-screen max-h-screen flex-grow  flex-col items-center justify-center bg-black">
+    <div className="relative z-10 ml-28 flex h-screen max-h-screen flex-grow  flex-col items-center justify-center bg-[#000000]">
       <h1 className="p-5 text-left text-white ">{chatPartner.name}</h1>
       <div className="flex flex-grow items-center justify-center">
         <div className="flex  flex-grow flex-col overflow-hidden ">
@@ -213,7 +213,7 @@ const Video = ({
             <i className="fa-solid fa-video text-xl text-white"></i>
           </button>
           <button
-            className=" rotate-120 h-16 w-16 transform rounded-full bg-red-500"
+            className=" rotate-120 h-16 w-16 transform rounded-full bg-[#FF0000]"
             onClick={handleEndVideoCall}
           >
             <i className="fa-solid fa-phone  text-xl text-white"></i>

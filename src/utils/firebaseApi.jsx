@@ -379,6 +379,20 @@ const api = {
       throw error;
     }
   },
+  async listenUser(userId, callback) {
+    try {
+      const userRef = doc(db, "users", userId);
+      const unsubscribe = onSnapshot(userRef, (doc) => {
+        const userData = doc.data();
+        userData.id = doc.id;
+        callback(userData);
+      });
+      return unsubscribe;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
   async addUserRevised(
     targetUserId,
     wrongSentence,
@@ -413,11 +427,11 @@ const api = {
       throw error;
     }
   },
-  async storeWord(userId, word) {
+  async storeWord(userId, data) {
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
-        savedWords: arrayUnion(word),
+        collection: arrayUnion(data),
       });
     } catch (error) {
       console.log(error);

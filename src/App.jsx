@@ -8,7 +8,7 @@ import useWebRTCStore from "./zustand/webRTCStore";
 import { NextUIProvider } from "@nextui-org/react";
 
 function App() {
-  const { user, login } = useAuthStore();
+  const { user, login, setUser } = useAuthStore();
   const { setChatrooms } = useChatroomsStore();
   const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
 
@@ -23,6 +23,18 @@ function App() {
       };
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      const unsubUser = api.listenUser(user.id, (user) => {
+        setUser(user);
+      });
+
+      return () => {
+        unsubUser;
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {

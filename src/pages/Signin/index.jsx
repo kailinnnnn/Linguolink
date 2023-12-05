@@ -3,6 +3,9 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import googleIcon from "./google.avif";
+import { Input } from "@nextui-org/react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Button, ButtonGroup } from "@nextui-org/react";
 
 const Signin = () => {
   const { user, login, isLogin } = useAuthStore();
@@ -134,44 +137,79 @@ const Signin = () => {
   return (
     <>
       {!isRegistering ? (
-        <div className="ml-28 flex flex-col items-center">
-          <div className="mb-4">
-            <label htmlFor="email" className="mr-2">
+        <div className=" l-28 bg-main flex w-full flex-col items-center justify-center">
+          {/* <h1 className="font-righteous absolute top-0 mt-10 font-bold text-black">
+            LinguoLink
+          </h1> */}
+          <div className="mb-4 flex flex-col gap-2">
+            <label htmlFor="email" className=" text-black">
               Email
             </label>
-            <input
+            <Input
               type="text"
               id="email"
-              className="border-2 p-1"
               ref={emailRef}
+              placeholder="Enter your email"
+              className="w-72"
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="password" className="mr-2">
+          <div className="mb-4 flex flex-col gap-2">
+            <label htmlFor="password" className=" text-black">
               Password
             </label>
-            <input
+            <Input
               type="text"
               id="password"
-              className="border-2 p-1"
               ref={passwordRef}
+              placeholder="Enter your password"
+              className="w-72"
             />
           </div>
 
           <button
             onClick={handleNativeLogin}
-            className="w-56 bg-gray-300 px-4 py-2"
+            className=" my-5 w-72 rounded-lg border-2 border-white px-4 py-2 text-white"
           >
             Sign in
           </button>
-          <button onClick={handleGoogleLogin} className="flex items-center">
-            <img className=" h-12 w-12" src={googleIcon} />
-            Login with Google
-          </button>
-          <div>
-            Don't have an account yet?
-            <button onClick={() => setRegistering(true)}>Create one</button>
+          {/* 
+          <Button
+            color="primary"
+            onClick={handleNativeLogin}
+            className="w-56 bg-gray-300 px-4 py-2"
+          >
+            Sign in
+          </Button> */}
+          {/* 
+          <Button
+            color="secondary"
+            className="w-56 bg-gray-300 px-4 py-2"
+            variant="ghost"
+          >
+            Sign in
+          </Button> */}
+          <p>or login with</p>
+          <div className="my-5 flex gap-3">
+            <button onClick={handleGoogleLogin} className="flex  items-center ">
+              <i class="fa-brands fa-google text-3xl text-white"></i>
+            </button>
+            <button onClick={handleGoogleLogin} className="flex  items-center">
+              <i class="fa-brands fa-facebook text-3xl  text-white"></i>
+            </button>
+            <button onClick={handleGoogleLogin} className="flex  items-center">
+              <i class="fa-brands fa-twitter text-3xl  text-white"></i>
+            </button>
+          </div>
+
+          <div className=" flex">
+            <p className="pr-2">Don't have an account yet?</p>
+            <button
+              onClick={() => setRegistering(true)}
+              className="font-semibold "
+            >
+              Create one
+            </button>
           </div>
         </div>
       ) : (
