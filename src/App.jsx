@@ -6,12 +6,12 @@ import useAuthStore from "./zustand/AuthStore";
 import useChatroomsStore from "./zustand/ChatroomsStore";
 import useWebRTCStore from "./zustand/webRTCStore";
 import { NextUIProvider } from "@nextui-org/react";
-
+import { Link, useNavigate } from "react-router-dom";
 function App() {
-  const { user, login, setUser } = useAuthStore();
+  const { user, login, setUser, isLogin } = useAuthStore();
   const { setChatrooms } = useChatroomsStore();
   const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (user) {
       const unsubChatrooms = api.listenChatrooms(user.id, (chatrooms) => {
@@ -29,15 +29,15 @@ function App() {
       const unsubUser = api.listenUser(user.id, (user) => {
         setUser(user);
       });
-
+      console.log("listenUser");
       return () => {
         unsubUser;
       };
     }
-  }, []);
+  }, [isLogin]);
 
   useEffect(() => {
-    if (user) {
+    if (isLogin) {
       const unsubChatrooms = api.listenWebRTC(user.id, (webRTCData) => {
         setWebRTCInfo(webRTCData);
       });
@@ -46,7 +46,7 @@ function App() {
         unsubChatrooms;
       };
     }
-  }, [user]);
+  }, [isLogin]);
 
   useEffect(() => {
     localStorage.getItem("user") &&
@@ -54,12 +54,18 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log(webRTCInfo);
+    console.log("trigger WebRTC monitor", webRTCInfo);
   }, [webRTCInfo]);
+
+  useEffect(() => {
+    if (!user && !localStorage.getItem("user")) {
+      navigate("/login");
+    }
+  }, []);
 
   return (
     <NextUIProvider>
-      <div className="text-foreground bg-background light flex min-h-screen ">
+      <div className="flex min-h-screen w-full min-w-full bg-background text-foreground light">
         <Sidebar />
         <Outlet />
       </div>

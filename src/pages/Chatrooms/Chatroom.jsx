@@ -32,6 +32,7 @@ const Chatroom = ({
   const revisedRef = useRef();
   const commentRef = useRef();
   const toReviseSentRef = useRef();
+  const toCommentSentRef = useRef();
   const fileInputRef = useRef(null);
   const userVideoRoleRef = useRef("answer");
   const preStoredWordsRef = useRef(null);
@@ -40,13 +41,15 @@ const Chatroom = ({
   const menuIndexRef = useRef(null);
 
   useEffect(() => {
-    const unsubChatroom = api.listenChatroom(chatroomId, (chatroomData) => {
-      setChatroomData(chatroomData);
-    });
+    if (chatroomId) {
+      const unsubChatroom = api.listenChatroom(chatroomId, (chatroomData) => {
+        setChatroomData(chatroomData);
+      });
 
-    return () => {
-      unsubChatroom;
-    };
+      return () => {
+        unsubChatroom;
+      };
+    }
   }, [chatroomId]);
 
   useEffect(() => {
@@ -54,11 +57,9 @@ const Chatroom = ({
       const chatPartner = chatroomData.participants.find(
         (participant) => participant.id !== user.id,
       );
-      console.log(setChatPartner);
       api.getUser(chatPartner.id).then((chatPartner) => {
         setChatPartner(chatPartner);
       });
-      console.log(chatroomData);
     }
   }, [chatroomData]);
 
@@ -66,6 +67,7 @@ const Chatroom = ({
     if (
       userVideoRoleRef.current === "answer" &&
       webRTCInfo?.[0]?.offer &&
+      webRTCInfo?.[0].status?.isConnecting &&
       !webRTCInfo?.[0]?.offerIceCandidates &&
       !webRTCInfo?.[0]?.answerIceCandidates &&
       !webRTCInfo?.[0]?.answer
@@ -73,35 +75,10 @@ const Chatroom = ({
       setIsVideoOpen(true);
     }
 
-    if (
-      userVideoRoleRef.current === "answer" &&
-      webRTCInfo?.length === 1 &&
-      webRTCInfo?.[0] === "answer"
-    ) {
+    if (!webRTCInfo?.[0]?.status?.isConnecting) {
       setIsVideoOpen(false);
     }
   }, [webRTCInfo]);
-
-  useEffect(() => {
-    console.log(isSaveWordOpen);
-  }, [isSaveWordOpen]);
-
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     console.log(1);
-  //     if (menuRef.current && !menuRef.current.contains(event.target)) {
-  //       setIsMenuOpenArray((prevArray) => {
-  //         const newArray = [...prevArray];
-  //         newArray[menuIndexRef.current] = false;
-  //         return newArray;
-  //       });
-  //     }
-  //   };
-  //   document.addEventListener("click", handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener("click", handleClickOutside);
-  //   };
-  // }, []);
 
   const handleSendMessage = async () => {
     try {
@@ -120,9 +97,6 @@ const Chatroom = ({
         });
         setSelectedImage(null);
       } else {
-        console.log("send message");
-        console.log(toReviseSentRef.current?.textContent);
-        console.log(revisedRef.current?.value);
         await api.sendMessage(
           chatroomId,
           user.id,
@@ -130,6 +104,7 @@ const Chatroom = ({
           messageRef?.current?.value,
           toReviseSentRef.current?.textContent,
           revisedRef.current?.value,
+
           commentRef.current?.value,
         );
       }
@@ -139,10 +114,10 @@ const Chatroom = ({
   };
 
   const handleReviseMessage = async () => {
-    console.log("revise message");
     await api.addUserRevised(
       chatPartner.id,
       toReviseSentRef.current.textContent,
+      toCommentSentRef.current?.textContent,
       revisedRef.current.value,
       chatroomId,
     );
@@ -157,6 +132,7 @@ const Chatroom = ({
         chatPartner.id,
         messageRef.current.value,
         toReviseSentRef.current?.textContent,
+        toCommentSentRef.current?.textContent,
         revisedRef.current?.value,
         commentRef.current?.value,
         imageUrl,
@@ -193,16 +169,18 @@ const Chatroom = ({
   };
 
   return (
-    <div className=" flex  w-full ">
+    <div
+      className={` flex  w-3/4   ${
+        isVideoOpen && "fixed w-[calc((100vw-96px))]"
+      }`}
+    >
       {/* <MessageList /> */}
       {!isVideoOpen && chatPartner && (
-        <div className="relative flex h-full w-full">
-          <header className="border-gray300 fixed top-0 z-10 flex  h-20 w-[calc(67%)] items-center border-b-2 bg-white p-6">
+        <div className="relative flex  h-full max-h-full w-full">
+          <header className="fixed top-0 z-10 flex h-20  w-[calc((100vw-96px)*0.725)] items-center border-b-2 border-gray300 bg-white p-6 ">
             <div
               className="mr-4  flex h-10 min-h-fit w-10 min-w-fit items-center overflow-visible rounded-full border-white"
-              onMouseOver={() => {
-                console.log(1);
-              }}
+              onMouseOver={() => {}}
             >
               <img
                 src={chatPartner.profilePicture}
@@ -216,11 +194,11 @@ const Chatroom = ({
               </p>
             )}
             <button className=" ">
-              <i className="fa-solid fa-phone text-gray500 text-xl "></i>
+              <i className="fa-solid fa-phone text-xl text-gray500 hover:text-purple500"></i>
             </button>
             {!isVideoOpen && (
               <button className="" onClick={handleVideoCall}>
-                <i className="fa-solid fa-video text-main text-gray500 ml-6 text-xl"></i>
+                <i className="fa-solid fa-video text-main ml-6 text-xl text-gray500 hover:text-purple500"></i>
               </button>
             )}
 
@@ -228,7 +206,7 @@ const Chatroom = ({
               <i className="fa-solid  fa-ellipsis-vertical text-xl text-white"></i>
             </button>
           </header>
-          <div className="mb-20 mt-20 w-full p-6">
+          <div className=" my-[104px]  max-h-[calc(100vh-218px)] w-full overflow-hidden overflow-y-auto px-6">
             {chatPartner &&
               chatroomData &&
               chatroomData.messages.map((message, index) => {
@@ -242,7 +220,7 @@ const Chatroom = ({
                 return (
                   <div className="relative mt-4 flex rounded-xl" key={index}>
                     {message.sender !== user.id && (
-                      <div className="mr-3 h-10 w-10 overflow-hidden rounded-full">
+                      <div className="mr-3 h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] overflow-hidden rounded-full">
                         <img
                           src={chatPartner?.profilePicture}
                           className="h-full w-full object-cover"
@@ -251,10 +229,10 @@ const Chatroom = ({
                       </div>
                     )}
                     <div
-                      className={
+                      className={`${
                         message.sender === user.id &&
-                        "ml-auto flex-col   overflow-hidden rounded-xl"
-                      }
+                        "ml-auto   flex-col overflow-hidden rounded-xl"
+                      } max-w-[60%]`}
                     >
                       <div
                         key={index}
@@ -272,6 +250,7 @@ const Chatroom = ({
                                 !newIsMenuOpenArray[index];
                               setIsMenuOpenArray(newIsMenuOpenArray);
                               setSelectedMessage(message);
+                              console.log(selectedMessage);
                             }
                           }}
                         >
@@ -289,146 +268,163 @@ const Chatroom = ({
                             <p className={messageClass}>{message.content}</p>
                           )}
                           {message.revised && (
-                            <div className="p-4">
-                              <p className=" text-xs"> Revised</p>
+                            <div className="bg-gray100 p-4">
+                              <p className="mb-2 text-xs"> Revised</p>
                               <p className="text-red-500">
-                                <i className="fa-solid fa-xmark pr-2 text-red-500"></i>
+                                <i className="fa-solid fa-xmark pr-[0.6rem] text-red500"></i>
                                 {message.toReviseSent}
                               </p>
                               <p className=" text-green-500">
-                                <i className="fa-solid fa-check pr-1 text-green-500"></i>
+                                <i className="fa-solid fa-check pr-[0.2rem] text-green500"></i>
                                 {message.revised}
                               </p>
                             </div>
                           )}
                           {message.comment && (
                             <div className={`p-4 ${messageClass}`}>
-                              <p className=" text-xs">comment</p>
+                              <p className=" text-xs ">comment</p>
                               <p>{message.comment}</p>
                             </div>
                           )}
                         </div>
                         {isMenuOpenArray[index] && (
                           <div className=" ml-3 h-full">
-                            <i
-                              className="fa-solid fa-ellipsis text-gray500"
-                              onClick={() => {
-                                setIsMenuOpen(!isMenuOpen);
-                              }}
-                            ></i>
-                            {isMenuOpen && !isSaveWordOpen ? (
-                              <div
-                                className="bg-purple100 absolute left-[5.6rem] top-0 z-10 flex flex-col rounded-xl px-4 py-3 text-slate-200"
-                                ref={menuRef}
-                              >
-                                <button className=" hover:text-purple500 px-3 py-2">
-                                  Copy
-                                </button>
-                                <button
-                                  className="hover:text-purple500 px-3 py-2"
-                                  onClick={() => {
-                                    setInputCategory("revise");
-                                    setIsMenuOpen(!isMenuOpen);
+                            <div className="relative ">
+                              {" "}
+                              <i
+                                className="fa-solid fa-ellipsis text-gray500"
+                                onClick={() => {
+                                  setIsMenuOpen(!isMenuOpen);
+                                }}
+                              ></i>
+                              {isMenuOpen && !isSaveWordOpen ? (
+                                <div
+                                  className="text-slate-200 absolute left-[2rem] top-0 z-10 flex flex-col rounded-xl bg-purple100 px-4 py-3"
+                                  ref={menuRef}
+                                >
+                                  <button className=" px-3 py-2 hover:text-purple500">
+                                    Copy
+                                  </button>
+                                  <button
+                                    className="px-3 py-2 hover:text-purple500"
+                                    onClick={() => {
+                                      setInputCategory("revise");
+                                      setIsMenuOpen(!isMenuOpen);
 
-                                    const newIsMenuOpenArray = [
-                                      ...isMenuOpenArray,
-                                    ];
-                                    newIsMenuOpenArray[index] =
-                                      !newIsMenuOpenArray[index];
-                                    setIsMenuOpenArray(newIsMenuOpenArray);
-                                  }}
-                                >
-                                  Revise
-                                </button>
-                                <button
-                                  className="hover:text-purple500 px-3 py-2"
-                                  onClick={() => {
-                                    setInputCategory("comment");
-                                    setIsMenuOpen(!isMenuOpen);
+                                      const newIsMenuOpenArray = [
+                                        ...isMenuOpenArray,
+                                      ];
+                                      newIsMenuOpenArray[index] =
+                                        !newIsMenuOpenArray[index];
+                                      setIsMenuOpenArray(newIsMenuOpenArray);
+                                    }}
+                                  >
+                                    Revise
+                                  </button>
+                                  <button
+                                    className="px-3 py-2 hover:text-purple500"
+                                    onClick={() => {
+                                      setInputCategory("comment");
+                                      setIsMenuOpen(!isMenuOpen);
 
-                                    const newIsMenuOpenArray = [
-                                      ...isMenuOpenArray,
-                                    ];
-                                    newIsMenuOpenArray[index] =
-                                      !newIsMenuOpenArray[index];
-                                    setIsMenuOpenArray(newIsMenuOpenArray);
-                                  }}
-                                >
-                                  Comment
-                                </button>
-                                <button
-                                  className="hover:text-purple500 px-3 py-2"
-                                  onClick={() => {
-                                    setIsSaveWordOpen(!isSaveWordOpen);
-                                  }}
-                                >
-                                  Save
-                                </button>
-                                <button className="hover:text-purple500 px-3 py-2">
-                                  Tramslate
-                                </button>
-                              </div>
-                            ) : (
-                              isSaveWordOpen && (
-                                <div className="bg-purple100 absolute left-[5.6rem] top-0 z-10 flex flex-col  rounded-xl p-4 text-slate-200">
-                                  {/* <button className="flex ">
+                                      const newIsMenuOpenArray = [
+                                        ...isMenuOpenArray,
+                                      ];
+                                      newIsMenuOpenArray[index] =
+                                        !newIsMenuOpenArray[index];
+                                      setIsMenuOpenArray(newIsMenuOpenArray);
+                                    }}
+                                  >
+                                    Comment
+                                  </button>
+                                  <button
+                                    className="px-3 py-2 hover:text-purple500"
+                                    onClick={() => {
+                                      setIsSaveWordOpen(!isSaveWordOpen);
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                  <button className="px-3 py-2 hover:text-purple500">
+                                    Tramslate
+                                  </button>
+                                </div>
+                              ) : (
+                                isSaveWordOpen && (
+                                  <div className="text-slate-200 absolute -top-3 left-[2rem] z-10 flex flex-col rounded-xl  bg-purple100 p-4 shadow">
+                                    {/* <button className="flex ">
                                     <i class="fa-solid fa-arrow-left mr-auto "></i>
                                   </button> */}
-                                  <div>
-                                    <small className="mb-2 ml-1 flex">
-                                      Collection
-                                    </small>
-                                    <input
-                                      ref={preStoredWordsRef}
-                                      className=" mb-3 h-8 rounded-xl pl-3"
-                                    />
-                                  </div>
-                                  <div>
-                                    {" "}
-                                    <small className="mb-2 ml-1 flex">
-                                      Note
-                                    </small>
-                                    <input
-                                      ref={noteRef}
-                                      className="h-8 rounded-xl  pl-3"
-                                    />
-                                  </div>
-                                  <div className="mt-3">
-                                    <button
-                                      className="text-gray500 w-1/2 px-3 py-2"
-                                      onClick={() => {
-                                        setIsSaveWordOpen(!isSaveWordOpen);
-                                        setIsMenuOpen(!isMenuOpen);
+                                    <div>
+                                      <small className="mb-2 ml-1 flex">
+                                        Collection
+                                      </small>
+                                      <input
+                                        ref={preStoredWordsRef}
+                                        defaultValue={message.content}
+                                        className=" mb-3 h-8 rounded-lg pl-3  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
+                                      />
+                                    </div>
+                                    <div>
+                                      {" "}
+                                      <small className="mb-2 ml-1 flex">
+                                        Note
+                                      </small>
+                                      <input
+                                        ref={noteRef}
+                                        className="h-8 rounded-lg  pl-3  placeholder-gray500  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
+                                      />
+                                    </div>
+                                    <div className="mt-3">
+                                      <button
+                                        className="w-1/2 px-3 py-2 text-gray500"
+                                        onClick={() => {
+                                          setIsSaveWordOpen(!isSaveWordOpen);
+                                          setIsMenuOpen(!isMenuOpen);
+                                          const newIsMenuOpenArray = [
+                                            ...isMenuOpenArray,
+                                          ];
+                                          newIsMenuOpenArray[index] =
+                                            !newIsMenuOpenArray[index];
+                                          setIsMenuOpenArray(
+                                            newIsMenuOpenArray,
+                                          );
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        className="w-1/2 px-3 py-2 text-purple500"
+                                        onClick={() => {
+                                          handleSaveWord();
+                                          setIsMenuOpen(!isMenuOpen);
 
-                                        const newIsMenuOpenArray = [
-                                          ...isMenuOpenArray,
-                                        ];
-                                        newIsMenuOpenArray[index] =
-                                          !newIsMenuOpenArray[index];
-                                        setIsMenuOpenArray(newIsMenuOpenArray);
-                                      }}
-                                    >
-                                      Cancel
-                                    </button>
-                                    <button
-                                      className="text-purple500 w-1/2 px-3 py-2"
-                                      onClick={handleSaveWord}
-                                    >
-                                      Save
-                                    </button>
+                                          const newIsMenuOpenArray = [
+                                            ...isMenuOpenArray,
+                                          ];
+                                          newIsMenuOpenArray[index] =
+                                            !newIsMenuOpenArray[index];
+                                          setIsMenuOpenArray(
+                                            newIsMenuOpenArray,
+                                          );
+                                        }}
+                                      >
+                                        Save
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              )
-                            )}
+                                )
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
 
                       <small
-                        className={`text-gray500 mt-1  ${
+                        className={`mt-1 text-gray500  ${
                           message.sender === user.id
                             ? "ml-auto text-right"
-                            : "ml-auto text-right"
+                            : "ml-auto text-left"
                         }`}
                         onClick={() => console.log(message.sender, user.id)}
                       >
@@ -440,7 +436,7 @@ const Chatroom = ({
               })}
           </div>
 
-          <footer className="border-gray300 fixed bottom-0 mt-10 flex w-[calc(67%)]  flex-wrap items-center border-t-2 bg-white p-6">
+          <footer className="fixed bottom-0 z-10 flex  w-[calc((100vw-96px)*0.725)] flex-wrap  items-center border-t-2 border-gray300 bg-white p-6">
             {inputCategory === "revise" && (
               <div className="flex w-full flex-wrap ">
                 <div className=" flex w-full flex-wrap">
@@ -454,24 +450,35 @@ const Chatroom = ({
                 </div>
 
                 <div className="flex w-full gap-5">
-                  <div className="bg-gray100 mb-5 flex w-[calc(50%-0.5rem)] flex-grow flex-col justify-between gap-3 rounded-xl p-5">
+                  <div className="mb-5 flex w-[calc(50%-0.5rem)] flex-grow flex-col justify-between gap-3 rounded-xl bg-gray100 p-5">
                     <small>Original Meaning</small>
                     <p ref={toReviseSentRef} className="text-gray700">
-                      {selectedMessage?.content !== ""
+                      {selectedMessage.content !== "" &&
+                      selectedMessage.content !== null
                         ? selectedMessage?.content
-                        : selectedMessage?.comment !== ""
+                        : selectedMessage?.comment !== "" &&
+                            selectedMessage.comment !== null
                           ? selectedMessage?.comment
                           : selectedMessage?.revised}
                     </p>
                   </div>
-                  <div className="bg-gray100 mb-5 flex w-[calc(50%-0.5rem)] flex-grow flex-col gap-3 rounded-xl p-5">
+                  <div className="mb-5 flex w-[calc(50%-0.5rem)] flex-grow flex-col gap-3 rounded-xl bg-gray100 p-5">
                     <small>Revise</small>
                     <input
                       type="text"
                       name=""
                       id=""
                       ref={revisedRef}
-                      className="bg-gray100 flex-grow"
+                      className="flex-grow  whitespace-pre-wrap   bg-gray100 focus:border-2  focus:border-purple300 focus:outline-none focus:ring-purple300"
+                      defaultValue={
+                        selectedMessage.content !== "" &&
+                        selectedMessage.content !== null
+                          ? selectedMessage?.content
+                          : selectedMessage?.comment !== "" &&
+                              selectedMessage.comment !== null
+                            ? selectedMessage?.comment
+                            : selectedMessage?.revised
+                      }
                     />
                   </div>
                 </div>
@@ -479,7 +486,7 @@ const Chatroom = ({
                   <input
                     type="text"
                     ref={commentRef}
-                    className="bg-gray100 h-10 w-full max-w-full flex-1 flex-grow rounded-xl pl-5"
+                    className="h-10 w-full max-w-full flex-1 flex-grow rounded-xl bg-gray100 pl-5  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
                     placeholder="Type your message here... "
                   />
                   <button
@@ -490,7 +497,7 @@ const Chatroom = ({
                     }}
                     className="flex h-10 w-10 items-center justify-center rounded-full"
                   >
-                    <i className="fa-solid fa-paper-plane text-purple500 text-xl"></i>
+                    <i className="fa-solid fa-paper-plane text-xl text-purple500"></i>
                   </button>
                 </div>
               </div>
@@ -525,7 +532,7 @@ const Chatroom = ({
                   </button>
                 </div>
 
-                <p ref={toReviseSentRef} className=" rounded-xl p-5 pt-2">
+                <p ref={toCommentSentRef} className=" rounded-xl p-5 pt-2">
                   {selectedMessage?.content !== ""
                     ? selectedMessage?.content
                     : selectedMessage?.comment !== ""
@@ -537,7 +544,7 @@ const Chatroom = ({
                   <input
                     type="text"
                     ref={commentRef}
-                    className="bg-gray100 h-10 w-full max-w-full flex-1 flex-grow rounded-xl pl-5"
+                    className="h-10 w-full max-w-full flex-1 flex-grow rounded-xl bg-gray100 pl-5  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
                     placeholder="Type your comment here... "
                   />
                   <button
@@ -547,7 +554,7 @@ const Chatroom = ({
                     }}
                     className="flex h-10 w-10 items-center justify-center rounded-full"
                   >
-                    <i className="fa-solid fa-paper-plane text-purple500 text-xl"></i>
+                    <i className="fa-solid fa-paper-plane text-xl text-purple500"></i>
                   </button>
                 </div>
               </div>
@@ -561,12 +568,12 @@ const Chatroom = ({
                     setInputCategory("record");
                   }}
                 >
-                  <i className="fa-solid fa-microphone text-gray500 hover:text-purple500 text-xl"></i>
+                  <i className="fa-solid fa-microphone text-xl text-gray500 hover:text-purple500"></i>
                 </button>
                 <button className="mr-4 ">
-                  <i className="fa-solid fa-camera text-gray500 hover:text-purple500 text-xl"></i>
+                  <i className="fa-solid fa-camera text-xl text-gray500 hover:text-purple500"></i>
                 </button>
-                <label className="mr-4 ">
+                <label className="mr-4 cursor-pointer">
                   <input
                     type="file"
                     style={{ display: "none" }}
@@ -583,7 +590,7 @@ const Chatroom = ({
                     accept="image/*"
                   />
                   <i
-                    className="fa-solid fa-image text-gray500 hover:text-purple500 text-xl"
+                    className="fa-solid fa-image text-xl text-gray500 hover:text-purple500"
                     // onClick={() => fileInputRef.current.click()}
                   ></i>
                 </label>
@@ -591,15 +598,18 @@ const Chatroom = ({
                 <input
                   type="text"
                   ref={messageRef}
-                  className="bg-gray100 h-10 w-full max-w-full flex-1 rounded-full pl-5"
+                  className="h-10 w-full max-w-full flex-1 rounded-full bg-gray100 pl-5  focus:outline-none "
                   placeholder="Type your message here... "
                 />
 
                 <button
                   onClick={handleSendMessage}
+                  // disabled={messageRef.current?.value === ""}
                   className="flex h-10 w-10 items-center justify-center rounded-full"
                 >
-                  <i className="fa-solid fa-paper-plane text-purple500 text-xl"></i>
+                  <i
+                    className={`fa-solid fa-paper-plane text-xl text-purple500`}
+                  ></i>
                 </button>
               </>
             )}

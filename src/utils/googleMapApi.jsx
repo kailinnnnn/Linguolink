@@ -7,16 +7,16 @@ const googleMapApi = {
       );
       const data = await response.json();
       const addressComponents = data.results[0].address_components;
-      console.log(addressComponents);
       let city, country;
       for (const component of addressComponents) {
         if (component.types.includes("administrative_area_level_1")) {
-          city = component.long_name;
+          city = component?.long_name;
         }
         if (component.types.includes("country")) {
-          country = component.long_name;
+          country = component?.long_name;
         }
       }
+      console.log({ city, country });
       return { city, country };
     } catch {
       (error) => {

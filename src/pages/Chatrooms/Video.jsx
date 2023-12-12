@@ -66,167 +66,175 @@ const Video = ({
         };
 
         if (userVideoRoleRef.current === "offer") {
-          if (!webRTCInfo?.[0]?.offer) {
-            console.log(peerConnection.current);
+          if (!webRTCInfo?.[0]) {
+            await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
+              isConnecting: true,
+            });
+            return;
+          }
+
+          if (webRTCInfo[0] && !webRTCInfo[0]?.offer) {
             const offer = await peerConnection.current.createOffer();
             await peerConnection.current.setLocalDescription(offer);
-            api.sendOffer(chatroomId, user.id, chatPartner.id, offer);
+            await api.sendOffer(chatroomId, user.id, chatPartner.id, offer);
             console.log("offerer send offer");
-            console.log(peerConnection.current);
+            return;
           }
+
           if (
-            webRTCInfo?.[0]?.answer &&
-            !webRTCInfo?.[0]?.answerIceCandidates
+            webRTCInfo[0].answer &&
+            !peerConnection.current.currentRemoteDescription
           ) {
+            console.log(peerConnection.current.currentRemoteDescription);
             console.log("offerer get remote answer");
             const answer = new RTCSessionDescription(webRTCInfo[0].answer);
             await peerConnection.current.setRemoteDescription(answer);
-            console.log(peerConnection.current);
+            return;
           }
+
           if (
-            webRTCInfo[0]?.answerIceCandidates &&
-            peerConnection.current.iceConnectionState !== "connected"
+            webRTCInfo[0]?.answerIceCandidates
+            // !peerConnection.current.currentRemoteDescription
           ) {
-            // webRTCInfo[0].answerIceCandidates.forEach((candidate) => {
-            peerConnection.current.addIceCandidate(
+            await peerConnection.current.addIceCandidate(
               new RTCIceCandidate(webRTCInfo[0].answerIceCandidates),
             );
             console.log(peerConnection.current);
-            // });
           }
         }
 
-        if (
-          userVideoRoleRef.current === "answer" &&
-          peerConnection.current.iceConnectionState !== "disconnected"
-        ) {
-          console.log(peerConnection.current);
-          if (webRTCInfo[0]?.offer && !webRTCInfo[0]?.answer) {
-            console.log(peerConnection.current);
+        if (userVideoRoleRef.current === "answer") {
+          if (
+            webRTCInfo?.[0]?.offer &&
+            !peerConnection.current.currentRemoteDescription &&
+            !peerConnection.current.currentLocalDescription
+          ) {
             const offer = new RTCSessionDescription(webRTCInfo[0].offer);
             await peerConnection.current.setRemoteDescription(offer);
-
             const answer = await peerConnection.current.createAnswer();
             await peerConnection.current.setLocalDescription(answer);
             api.sendAnswer(chatroomId, user.id, chatPartner.id, answer);
-            console.log("answerer send answer");
-            console.log(peerConnection.current);
           }
-          if (webRTCInfo[0]?.offerIceCandidates) {
-            // webRTCInfo[0].offerIceCandidates.forEach((candidate) => {
 
-            peerConnection.current.addIceCandidate(
+          if (webRTCInfo[0]?.offerIceCandidates) {
+            console.log(2);
+            // webRTCInfo[0].offerIceCandidates.forEach((candidate) => {
+            await peerConnection.current.addIceCandidate(
               new RTCIceCandidate(webRTCInfo[0].offerIceCandidates),
             );
             console.log(peerConnection.current);
             // });
           }
         }
+        // console.log(localStreamRef.current, localStreamRef.current.srcObject);
 
-        localStreamRef.current.srcObject = stream;
+        if (localStreamRef.current) {
+          localStreamRef.current.srcObject = stream;
+        }
       } catch (error) {
         console.error("Error starting video call:", error);
       }
     };
 
     startVideoCall();
-
-    return () => {
-      handleEndVideoCall;
-    };
   }, [webRTCInfo]);
 
   const handleEndVideoCall = async () => {
-    await api.deleteWebRTCData(chatroomId, user.id, chatPartner.id);
-    console.log("delete webrtc data");
-    setIsVideoOpen(false);
-    console.log("set isVideoOpen to false");
-    setWebRTCInfo(null);
-    console.log("set webrtcInfo to null");
-    peerConnection.current.close();
-
-    // if (
-    //   !peerConnection.current ||
-    //   peerConnection.current.connectionState === "closed"
-    // ) {
-    //   peerConnection.current = new RTCPeerConnection(configuration);
-    // }
-
-    console.log("close connectioin");
+    console.log(localStreamRef?.current?.srcObject?.getTracks());
     if (localStreamRef.current && localStreamRef.current.srcObject) {
-      localStreamRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      localStreamRef.current.srcObject = null;
+      localStreamRef.current.srcObject.getTracks().forEach((track) => {
+        track.stop();
+      });
+      localStreamRef.current = null;
+      console.log("stop local stream");
     }
-    console.log("close local tracks");
-
+    console.log(remoteStreamRef?.current?.srcObject?.getTracks());
     if (remoteStreamRef.current && remoteStreamRef.current.srcObject) {
       remoteStreamRef.current.srcObject
         .getTracks()
         .forEach((track) => track.stop());
-      remoteStreamRef.current.srcObject = null;
+      remoteStreamRef.current = null;
+      console.log("stop remote stream");
     }
-    console.log("close remote tracks");
+    peerConnection.current.close();
+
+    console.log(2222222222222222);
+    await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
+      isConnecting: false,
+    });
+    await api.deleteWebRTCData(chatroomId, user.id, chatPartner.id);
+
+    setIsVideoOpen(false);
+
+    setWebRTCInfo(null);
+
+    if (userVideoRoleRef.current === "offer") {
+      userVideoRoleRef.current = "answer";
+    }
   };
 
-  return (
-    <div className="relative z-10 ml-28 flex h-screen max-h-screen flex-grow  flex-col items-center justify-center bg-[#000000]">
-      <h1 className="p-5 text-left text-white ">{chatPartner.name}</h1>
-      <div className="flex flex-grow items-center justify-center">
-        <div className="flex  flex-grow flex-col overflow-hidden ">
-          <video
-            autoPlay
-            playsInline
-            muted={false}
-            ref={remoteStreamRef}
-          ></video>
-        </div>
-        <div className="flex flex-grow flex-col overflow-hidden ">
-          <video
-            autoPlay
-            playsInline
-            muted={false}
-            ref={localStreamRef}
-          ></video>
-        </div>
-      </div>
+  useEffect(() => {
+    return () => {
+      handleEndVideoCall();
+      console.log("video call end");
+    };
+  }, []);
 
-      <div className="flex h-32 w-full items-center justify-center pb-10">
-        <div className=" flex h-32 w-full items-center justify-center gap-3">
-          <button
-            className=" h-16 w-16 rounded-full bg-neutral-700"
-            onClick={handleEndVideoCall}
-          >
-            <i className="fa-solid fa-volume-high text-xl text-white"></i>
-          </button>
-          <button
-            className=" h-16 w-16 rounded-full bg-neutral-700 "
-            onClick={handleEndVideoCall}
-          >
-            <i className="fa-solid fa-microphone text-xl text-white"></i>
-          </button>
-          <button
-            className=" h-16 w-16 rounded-full bg-neutral-700 "
-            onClick={handleEndVideoCall}
-          >
-            <i className="fa-solid fa-video text-xl text-white"></i>
-          </button>
-          <button
-            className=" rotate-120 h-16 w-16 transform rounded-full bg-[#FF0000]"
-            onClick={handleEndVideoCall}
-          >
-            <i className="fa-solid fa-phone  text-xl text-white"></i>
+  return (
+    chatPartner && (
+      <div className="relative z-10 flex h-screen max-h-screen flex-grow  flex-col items-center justify-center bg-[#000000]">
+        <h1 className="p-5 text-left text-white ">{chatPartner.name}</h1>
+        <div className="flex flex-grow items-center justify-center">
+          <div className="flex  flex-grow flex-col overflow-hidden ">
+            <video
+              autoPlay
+              playsInline
+              muted={false}
+              ref={remoteStreamRef}
+            ></video>
+          </div>
+          <div className="flex flex-grow flex-col overflow-hidden ">
+            <video
+              autoPlay
+              playsInline
+              muted={false}
+              ref={localStreamRef}
+            ></video>
+          </div>
+        </div>
+
+        <div className="flex h-32 w-full items-center justify-center pb-10">
+          <div className=" flex h-32 w-full items-center justify-center gap-3">
+            <button className=" bg-neutral-700 h-16 w-16 rounded-full" disabled>
+              <i className="fa-solid fa-volume-high text-xl text-white"></i>
+            </button>
+            <button
+              className=" bg-neutral-700 h-16 w-16 rounded-full "
+              disabled
+            >
+              <i className="fa-solid fa-microphone text-xl text-white"></i>
+            </button>
+            <button
+              className=" bg-neutral-700 h-16 w-16 rounded-full "
+              disabled
+            >
+              <i className="fa-solid fa-video text-xl text-white"></i>
+            </button>
+            <button
+              className=" rotate-120 ml-3 h-16 w-16 transform rounded-full bg-[#FF0000]"
+              onClick={() => {
+                setIsVideoOpen(false);
+              }}
+            >
+              <i className="fa-solid fa-phone  text-xl text-white"></i>
+            </button>
+          </div>
+          <button className="fixed right-5 h-16 w-16 rounded-full " disabled>
+            <i className="fa-solid fa-down-left-and-up-right-to-center text-2xl text-white"></i>
           </button>
         </div>
-        <button
-          className="fixed right-5 h-16 w-16 rounded-full "
-          onClick={handleEndVideoCall}
-        >
-          <i className="fa-solid fa-down-left-and-up-right-to-center text-2xl text-white"></i>
-        </button>
       </div>
-    </div>
+    )
   );
 };
 

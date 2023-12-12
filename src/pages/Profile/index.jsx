@@ -5,20 +5,21 @@ import useAuthStore from "../../zustand/AuthStore";
 import googleMapApi from "../../utils/googleMapApi";
 import profileMapImage from "./profileMap.avif";
 
-const buttonStyles = "rounded-xl bg-gray-300 py-3 px-5 w-full text-left";
+const buttonStyles = "rounded-xl bg-gray-300 py-3 px-5 w-full text-left ";
 const titleStyles = "text-xl font-semibold text-black mr-5 whitespace-nowrap";
 const Profile = () => {
   const { logout, user, isLogin, setUser } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState("aboutMe");
-  const [locationText, setLocationText] = useState(null);
+  const [location, setLocation] = useState(null);
   const [editingBlock, setEditingBlock] = useState(null);
   const [inputPhoto, setInputPhoto] = useState(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const nameRef = useRef();
   const birthdateRef = useRef();
   const topicRef = useRef();
   const partnerQualitiesRef = useRef();
   const goalsRef = useRef();
-  const photoInputRef = useRef();
+  const mainTopicRef = useRef();
   const styleMappings = {
     meetings: { text: "In-Person Meetings", icon: "fa-solid fa-coffee" },
     textAndVoice: {
@@ -27,21 +28,51 @@ const Profile = () => {
     },
     voiceAndVideo: { text: "Voice or Video Calls", icon: "fa-solid fa-video" },
   };
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/signin");
+    }
+  }, []);
+
   // useEffect(() => {
-  //   if (!user) {
-  //     alert("Please login first");
-  //     navigate("/signin");
+  //   if (user?.location) {
+  //     getLocation();
   //   }
-  //   getLocation();
-  //   console.log(user);
   // }, [user]);
 
-  const getLocation = () => {
-    const { latitude, longitude } = location;
-    googleMapApi.getLocation(latitude, longitude).then((location) => {
-      console.log(location);
-      setLocationText(location);
+  // const getLocation = () => {
+  //   const { latitude, longitude } = user?.location;
+  //   googleMapApi.getLocation(latitude, longitude).then((location) => {
+  //     setLocationText(location);
+  //     setUser({ ...user, location: { ...user.location, ...location } });
+  //   });
+  // };
+
+  const updateLocation = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      googleMapApi.getLocation(latitude, longitude).then((location) => {
+        // setLocation({
+        //   lat: latitude,
+        //   lng: longitude,
+        //   city: location.city,
+        //   country: location.country,
+        // });
+        api.updateUser(user.id, {
+          location: {
+            lat: latitude,
+            lng: longitude,
+            city: location.city,
+            country: location.country,
+          },
+        });
+        // const newUser = { ...user, ...changes };
+        // setUser(newUser);
+      });
+      setIsFetchingLocation(false);
     });
   };
 
@@ -62,15 +93,34 @@ const Profile = () => {
   const handleUpdateProfilePicture = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      setEditingBlock(null);
       api.uploadFile(selectedFile).then((url) => {
         api.uploadUserProfilePicture(user.id, url);
-        setUser((prevUser) => ({
-          ...prevUser,
-          profilePicture: url,
-        }));
+        const newUser = { ...user, profilePicture: url };
+        setUser(newUser);
+        setEditingBlock(null);
       });
     }
+  };
+
+  const handleDeletePhoto = (photo) => {
+    api.deleteUserPhoto(user.id, photo.num);
+    const newUser = {
+      ...user,
+      photos: user.photos.map((item) => {
+        if (item.num === photo.num) {
+          item.url = "";
+        }
+        return item;
+      }),
+    };
+    setUser(newUser);
+  };
+
+  const handleSaveChanges = (changes) => {
+    api.updateUser(user.id, changes);
+    const newUser = { ...user, ...changes };
+    setUser(newUser);
+    setEditingBlock(null);
   };
 
   useEffect(() => {
@@ -79,8 +129,8 @@ const Profile = () => {
   return (
     isLogin &&
     user && (
-      <div className="ml-24 flex flex-wrap p-4">
-        <div className="relative flex flex-col items-center justify-center">
+      <div className="ml-24 flex h-full w-full flex-wrap bg-white p-4">
+        <div className="relative flex w-full flex-col items-center justify-center">
           <div className="h-56 overflow-hidden rounded-t-xl">
             <img
               src={profileMapImage}
@@ -90,28 +140,31 @@ const Profile = () => {
           </div>
           <div className="absolute top-[9.5rem] z-10 flex h-44 w-full flex-col items-center justify-center">
             <div className="relative box-content flex h-36 min-h-fit w-36 min-w-fit overflow-visible rounded-full border-8 border-white">
-              <img
-                src={user.profilePicture}
-                alt=""
-                className="h-36 w-36 rounded-full object-cover"
-              />
-              {editingBlock !== "profilePiture" && (
-                <label className="absolute -bottom-2 -right-6">
-                  <input
-                    id="fileInput"
-                    type="file"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      setEditingBlock("profilePiture");
-                      handleUpdateProfilePicture(e);
-                    }}
-                    accept="image/*"
-                  />
-                  <p className="text-purple500 flex items-center justify-center">
-                    <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
-                  </p>
-                </label>
+              {user.profilePicture && (
+                <img
+                  src={user.profilePicture}
+                  alt=""
+                  className="h-36 w-36 rounded-full object-cover"
+                  onClick={() => console.log(user.profilePicture)}
+                />
               )}
+              <label className="absolute -bottom-2 -right-6">
+                <input
+                  id="fileInput"
+                  type="file"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    setEditingBlock("profilePiture");
+                    handleUpdateProfilePicture(e);
+                    console.log(user.profilePicture);
+                  }}
+                  accept="image/*"
+                  src={user.profilePicture}
+                />
+                <p className="flex items-center justify-center text-purple500">
+                  <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                </p>
+              </label>
             </div>
 
             <div className="relative mt-3 flex w-full items-center justify-center">
@@ -121,20 +174,24 @@ const Profile = () => {
               </p>
               <Link
                 to={`community/${user.id}`}
-                className="bg-purple100 absolute right-4 flex h-10 items-center justify-center whitespace-nowrap rounded-xl p-3"
+                className="absolute right-4 flex h-10 items-center justify-center whitespace-nowrap rounded-xl bg-purple100 p-3"
               >
-                <p className=" text-purple500 text-l ">Preview Profile</p>
+                <p className=" text-l text-purple500 ">Preview Profile</p>
               </Link>
             </div>
           </div>
         </div>
-        <div className="border-1 border-gray300  relative mb-6 mt-36 w-full" />
+        <div className="relative mb-6  mt-36 w-full border-1 border-gray300" />
         <aside className="flex w-1/5 flex-col gap-5 p-5 pt-0">
           <button
             onClick={() => {
               setSelectedCategory("aboutMe");
             }}
-            className={`${buttonStyles} bg-purple300 text-white`}
+            className={`${buttonStyles} ${
+              selectedCategory === "aboutMe"
+                ? "bg-purple300 text-white "
+                : "hover:bg-gray100"
+            }`}
           >
             About Me
           </button>
@@ -142,7 +199,11 @@ const Profile = () => {
             onClick={() => {
               setSelectedCategory("language");
             }}
-            className={buttonStyles}
+            className={`${buttonStyles} ${
+              selectedCategory === "language"
+                ? "bg-purple300 text-white"
+                : "hover:bg-gray100"
+            }`}
           >
             Language
           </button>
@@ -150,29 +211,42 @@ const Profile = () => {
             onClick={() => {
               setSelectedCategory("learningStyle");
             }}
-            className={buttonStyles}
+            className={`${buttonStyles} ${
+              selectedCategory === "learningStyle"
+                ? "bg-purple300 text-white"
+                : "hover:bg-gray100"
+            }`}
           >
             Communication Style
           </button>
           <button
             onClick={() => {
-              setSelectedCategory("topic");
+              setSelectedCategory("mainTopic");
             }}
-            className={buttonStyles}
+            className={`${buttonStyles} ${
+              selectedCategory === "mainTopic"
+                ? "bg-purple300 text-white"
+                : "hover:bg-gray100"
+            }`}
           >
             Topic
           </button>
           <button
             onClick={() => {
+              setSelectedCategory("logout");
               logout();
               navigate("/signin");
             }}
-            className={buttonStyles}
+            className={`${buttonStyles} ${
+              selectedCategory === "logout"
+                ? "bg-purple300 text-white"
+                : "hover:bg-gray100"
+            }`}
           >
             Logout
           </button>
         </aside>
-        <section className="bg-gray100 w-4/5 rounded-xl px-16 py-14 ">
+        <section className="w-4/5 rounded-xl bg-gray100 px-16 py-14 ">
           {selectedCategory === "aboutMe" && (
             <div className="flex flex-col ">
               <div className="flex">
@@ -180,9 +254,9 @@ const Profile = () => {
 
                 <input
                   disabled={editingBlock !== "name"}
-                  value={user.name}
+                  defaultValue={user.name}
                   ref={nameRef}
-                  className="w-fit"
+                  className="max-w-fit"
                 />
                 {editingBlock === "name" ? (
                   <>
@@ -199,26 +273,26 @@ const Profile = () => {
                   </>
                 ) : (
                   <button onClick={() => setEditingBlock("name")}>
-                    <p className="text-purple500 flex items-center justify-center">
+                    <p className="flex items-center justify-center text-purple500">
                       <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
                     </p>
                   </button>
                 )}
               </div>
-              <div className="border-1 border-gray300  relative my-8 w-full" />
+              <div className="relative my-8  w-full border-1 border-gray300" />
 
               <div className="flex">
                 <p className={titleStyles}> LinguoLink ID</p>
                 <p>{user.id}</p>
               </div>
-              <div className="border-1 border-gray300  relative my-8 w-full" />
+              <div className="relative my-8  w-full border-1 border-gray300" />
               <div className="flex">
                 <p className={titleStyles}> Birthdate</p>
 
                 <input
                   name="birthdate"
                   type="date"
-                  value={user.birthdate}
+                  defaultValue={user.birthdate}
                   min="1930-01-01"
                   max={new Date().toISOString().split("T")[0]}
                   disabled={editingBlock !== "birthdate"}
@@ -241,28 +315,41 @@ const Profile = () => {
                   </>
                 ) : (
                   <button onClick={() => setEditingBlock("birthdate")}>
-                    <p className="text-purple500 flex items-center justify-center">
+                    <p className="flex items-center justify-center text-purple500">
                       <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
                     </p>
                   </button>
                 )}
               </div>
-              <div className="border-1 border-gray300  relative my-8 w-full" />
+              <div className="relative my-8  w-full border-1 border-gray300" />
               <div className="flex">
                 <p className={titleStyles}> Location</p>
+                <p
+                  onClick={() => {
+                    console.log(user);
+                  }}
+                >{`${user.location?.placename?.country},${user.location?.placename?.city}`}</p>
+                {/* {location && <p>{`${location?.country},${location?.city}`}</p>} */}
 
-                {locationText && (
-                  <p>{`${user.locationText.country},${user.locationText.city}`}</p>
-                )}
-
-                <button onClick={getLocation}>
-                  <p className="text-purple500 flex items-center justify-center ">
-                    <i className="fa-solid fa-arrow-rotate-right text-s p-1 "></i>
-                    Update
+                <button
+                  onClick={() => {
+                    updateLocation();
+                    setIsFetchingLocation(true);
+                  }}
+                >
+                  <p className="flex items-center justify-center text-purple500 ">
+                    {isFetchingLocation ? (
+                      "Fetching..."
+                    ) : (
+                      <p>
+                        <i className="fa-solid fa-arrow-rotate-right text-s p-1 "></i>
+                        Update
+                      </p>
+                    )}
                   </p>
                 </button>
               </div>
-              <div className="border-1 border-gray300  relative my-7 w-full" />
+              <div className="relative my-7  w-full border-1 border-gray300" />
               <div className="flex flex-col">
                 <div className="flex items-center justify-center">
                   {" "}
@@ -292,7 +379,7 @@ const Profile = () => {
                       onClick={() => setEditingBlock("aboutMe")}
                       className="mr-auto"
                     >
-                      <p className="text-purple500 flex items-center justify-center">
+                      <p className="flex items-center justify-center text-purple500">
                         <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
                       </p>
                     </button>
@@ -306,7 +393,7 @@ const Profile = () => {
                   </p>
                   <input
                     disabled={editingBlock !== "aboutMe"}
-                    value={
+                    defaultValue={
                       user.aboutMe?.topic
                         ? user.aboutMe.topic
                         : "Content not added yet"
@@ -320,7 +407,7 @@ const Profile = () => {
                   </p>
                   <input
                     disabled={editingBlock !== "aboutMe"}
-                    value={
+                    defaultValue={
                       user.aboutMe?.partnerQualities
                         ? user.aboutMe.partnerQualities
                         : "Content not added yet"
@@ -333,7 +420,7 @@ const Profile = () => {
                   </p>
                   <input
                     disabled={editingBlock !== "aboutMe"}
-                    value={
+                    defaultValue={
                       user.aboutMe?.goals
                         ? user.aboutMe.goals
                         : "Content not added yet"
@@ -343,7 +430,7 @@ const Profile = () => {
                   />
                 </div>
               </div>
-              <div className="border-1 border-gray300  relative my-7 w-full" />
+              <div className="relative my-7  w-full border-1 border-gray300" />
 
               <div className="flex flex-wrap">
                 <p className={`${titleStyles} mb-7 w-full`}> Photos</p>
@@ -360,23 +447,29 @@ const Profile = () => {
                           />
                         </div>
 
-                        <button className="bg-purple500 border-3 absolute -right-1 bottom-0 h-7 w-7 rounded-full border-white">
+                        <button
+                          className="absolute -right-1 bottom-0 h-7 w-7 rounded-full border-3 border-white bg-purple500"
+                          onClick={() => {
+                            handleDeletePhoto(photo);
+                          }}
+                        >
                           <i className="fa-solid fa-xmark text-white"></i>
                         </button>
                       </div>
-                    ) : inputPhoto?.index === index ? (
-                      <div key={index}>
-                        <img
-                          src={URL.createObjectURL(inputPhoto.selectedFile)}
-                          alt=""
-                          className="h-32 w-32"
-                        />
-                        <button>
-                          <i className="fa-solid fa-xmark"></i>
-                        </button>
-                      </div>
                     ) : (
-                      <label className="bg-gray300 flex h-48 w-72 items-center justify-center rounded-xl">
+                      //  inputPhoto?.index === index ? (
+                      //   <div key={index}>
+                      //     <img
+                      //       src={URL.createObjectURL(inputPhoto.selectedFile)}
+                      //       alt=""
+                      //       className="h-32 w-32"
+                      //     />
+                      //     <button>
+                      //       <i className="fa-solid fa-xmark"></i>
+                      //     </button>
+                      //   </div>
+                      // ) :
+                      <label className="flex h-48 w-72 items-center justify-center rounded-xl bg-gray300">
                         <input
                           id="fileInput"
                           type="file"
@@ -394,54 +487,69 @@ const Profile = () => {
           )}
           {selectedCategory === "language" && (
             <>
-              <div>
-                My Native Language
-                <button>
-                  <i className="fa-solid fa-pen"></i>Edit
-                </button>
+              <div className="flex items-center">
+                <p className={`${titleStyles} `}> My Native Language</p>
+                <p className="mr-3">{user?.nativeLanguage}</p>
+                <p className="flex items-center justify-center text-purple500">
+                  <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                </p>
                 <div />
-                <p>{user.nativeLanguage}</p>
               </div>
-              <div>
-                I can also speak fluently
-                <button>
-                  <i className="fa-solid fa-pen"></i>Edit
-                </button>
+              <div className="relative my-8  w-full border-1 border-gray300" />
+              <div className="flex items-center">
+                <p className={`${titleStyles} `}> I can also speak fluently</p>
+                {/* {user?.alsoSpeak?.map((language) => {
+                  return <p className="mr-3">{language}</p>;
+                })} */}
+                <p className="mr-3">{user.alsoSpeak}</p>
+                <p className="flex items-center justify-center text-purple500">
+                  <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                </p>
                 <div />
-                <p>{user.alsoSpeak}</p>
               </div>
-              <div>
-                I am learning
-                <button>
-                  <i className="fa-solid fa-pen"></i>Edit
-                </button>
+              <div className="relative my-8  w-full border-1 border-gray300" />
+              <div className="flex items-center">
+                <p className={`${titleStyles} `}> I am learning</p>
+                <p className="mr-3">
+                  {user?.learningLanguage.learningLanguage}
+                </p>
+                <p className="flex items-center justify-center text-purple500">
+                  <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                </p>
                 <div />
-                <p>{user.learningLanguage}</p>
               </div>
-              <div>
-                Translate received messages into
-                <button>
-                  <i className="fa-solid fa-pen"></i>Edit
-                </button>
+              <div className="relative my-8  w-full border-1 border-gray300" />
+              <div className="flex items-center">
+                <p className={`${titleStyles} `}>
+                  {" "}
+                  Translate received messages into
+                </p>
+                <p className="mr-3">{user?.translate}</p>
+                <p className="flex items-center justify-center text-purple500">
+                  <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                </p>
                 <div />
-                <p>{user.translate}</p>
               </div>
             </>
           )}
           {selectedCategory === "learningStyle" && (
             <>
-              <div>
-                Communication Style
-                <button>
-                  <i className="fa-solid fa-pen"></i>Edit
-                </button>
+              <div className="">
+                <div className="flex ">
+                  <p className={`${titleStyles} `}> Communication Style</p>
+                  <p className="mr-auto flex items-center justify-center text-purple500">
+                    <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                  </p>
+                </div>
                 <div />
                 {Object.entries(user.communicationStyle).map(
                   ([style, value]) => {
                     return (
                       value && (
-                        <p key={style}>
-                          <i className={styleMappings[style].icon}></i>
+                        <p key={style} className="mb-4 mt-5 ">
+                          <i
+                            className={`${styleMappings[style].icon} mr-2 text-purple500`}
+                          ></i>
                           {styleMappings[style].text}
                         </p>
                       )
@@ -454,21 +562,45 @@ const Profile = () => {
           {selectedCategory === "mainTopic" && (
             <>
               <div>
-                My Topics
-                <button>
-                  <i className="fa-solid fa-pen"></i>Edit
-                </button>
-                <div />
-                {user.mainTopic ? (
-                  <p>{user.mainTopic}</p>
-                ) : (
-                  <p>Topics not added yet</p>
-                )}
+                <div className="flex ">
+                  <p className={`${titleStyles} `}> My Topics</p>
+                  {/* <button className="mr-auto flex items-center justify-center text-purple500">
+                    <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                  </button> */}
+                  {editingBlock === "mainTopic" ? (
+                    <>
+                      <button onClick={() => setEditingBlock(null)}>
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleSaveChanges({
+                            mainTopic: mainTopicRef.current.value,
+                          });
+                        }}
+                      >
+                        Save
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setEditingBlock("mainTopic")}>
+                      <p className="flex items-center justify-center text-purple500">
+                        <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
+                      </p>
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  disabled={editingBlock !== "mainTopic"}
+                  defaultValue={user.mainTopic}
+                  ref={mainTopicRef}
+                  className="mb-4 mt-5 max-w-fit"
+                />
               </div>
             </>
           )}
         </section>
-        \
       </div>
     )
   );

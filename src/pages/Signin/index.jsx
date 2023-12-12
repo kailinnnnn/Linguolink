@@ -2,17 +2,26 @@ import api from "../../utils/firebaseApi";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
+import bgImage from "./bg.jpg";
 import googleIcon from "./google.avif";
-import { Input } from "@nextui-org/react";
+import { Checkbox } from "@nextui-org/react";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, ButtonGroup } from "@nextui-org/react";
+import googleMapApi from "../../utils/googleMapApi";
 
 const Signin = () => {
   const { user, login, isLogin } = useAuthStore();
   const [isRegistering, setRegistering] = useState(false);
   const [isNextPage, setIsNextPage] = useState(false);
   const [location, setLocation] = useState(null);
-  const [firstPageFormData, setFirstPageFormData] = useState({});
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [firstPageFormData, setFirstPageFormData] = useState({
+    email: "",
+    password: "",
+    name: "",
+    birthdate: "",
+  });
   const navigate = useNavigate();
   const emailRef = useRef();
   const passwordRef = useRef();
@@ -42,12 +51,19 @@ const Signin = () => {
   };
 
   const handleNativeLogin = async () => {
-    const user = await api.nativeSignin(
-      emailRef.current.value,
-      passwordRef.current.value,
-    );
-    login(user);
-    navigate("/community");
+    try {
+      const user = await api.nativeSignin(
+        emailRef.current.value,
+        passwordRef.current.value,
+      );
+      login(user);
+      navigate("/community");
+    } catch {
+      (e) => {
+        console.log(e);
+        alert("登入失敗");
+      };
+    }
   };
 
   const handleNativeRegister = async () => {
@@ -67,13 +83,13 @@ const Signin = () => {
         translateRef.current.value,
         communicationStyleRef.current,
       );
-      console.log(userEmailAndPassword);
+
       const user = await api.nativeSignin(
         userEmailAndPassword.email,
         userEmailAndPassword.password,
       );
       login(user);
-      navigate(`/profile/${user.id}`);
+      navigate(`/community`);
     } catch {
       (e) => {
         console.log(e);
@@ -83,40 +99,18 @@ const Signin = () => {
   };
 
   const getLocation = () => {
-    const apiKey = "AIzaSyBeawM8HzUy5PhrWyAjdWueZtuUtmhT9E4"; // 將 YOUR_GOOGLE_MAPS_API_KEY 替換為你的 API 金鑰
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-
-        // 使用 Google Maps API 進行反向地理編碼
-        fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`,
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            const addressComponents = data.results[0].address_components;
-            console.log(addressComponents);
-            let city, country;
-            for (const component of addressComponents) {
-              if (component.types.includes("administrative_area_level_1")) {
-                city = component.long_name;
-              }
-              if (component.types.includes("country")) {
-                country = component.long_name;
-              }
-            }
-
-            setLocation({ lat: latitude, lng: longitude, city, country });
-          })
-          .catch((error) => {
-            console.error("發生錯誤：", error);
-          });
-      },
-      (error) => {
-        console.error("獲取地理位置失敗：", error.message);
-      },
-    );
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      googleMapApi.getLocation(latitude, longitude).then((location) => {
+        setLocation({
+          lat: latitude,
+          lng: longitude,
+          city: location.city,
+          country: location.country,
+        });
+      });
+      setIsFetchingLocation(false);
+    });
   };
 
   const handleNextPage = () => {
@@ -135,216 +129,305 @@ const Signin = () => {
   };
 
   return (
-    <>
+    <div className="flex h-full min-h-screen w-full bg-purple500" src={bgImage}>
       {!isRegistering ? (
-        <div className=" l-28 bg-main flex w-full flex-col items-center justify-center">
-          {/* <h1 className="font-righteous absolute top-0 mt-10 font-bold text-black">
-            LinguoLink
-          </h1> */}
+        <div className=" l-28 mx-auto flex  h-full min-h-screen w-2/3 flex-col items-center justify-center rounded-[30px] bg-gray100">
+          <p className="mb-8 mr-2 text-3xl font-semibold tracking-wide">
+            Sign in
+          </p>
           <div className="mb-4 flex flex-col gap-2">
-            <label htmlFor="email" className=" text-black">
+            <label htmlFor="email" className=" text-black ">
               Email
             </label>
-            <Input
+            <input
               type="text"
               id="email"
               ref={emailRef}
               placeholder="Enter your email"
-              className="w-72"
+              className="w-72 rounded-lg px-4 py-2 text-black"
             />
           </div>
 
-          <div className="mb-4 flex flex-col gap-2">
+          <div className="mb-5 flex flex-col gap-2">
             <label htmlFor="password" className=" text-black">
               Password
             </label>
-            <Input
+            <input
               type="text"
               id="password"
               ref={passwordRef}
               placeholder="Enter your password"
-              className="w-72"
+              className="k w-72 rounded-lg px-4 py-2 text-black"
             />
           </div>
 
           <button
             onClick={handleNativeLogin}
-            className=" my-5 w-72 rounded-lg border-2 border-white px-4 py-2 text-white"
+            className=" my-4 mb-6 w-72 rounded-lg border-2 bg-purple500 px-4 py-2 text-white"
           >
             Sign in
           </button>
-          {/* 
-          <Button
-            color="primary"
-            onClick={handleNativeLogin}
-            className="w-56 bg-gray-300 px-4 py-2"
-          >
-            Sign in
-          </Button> */}
-          {/* 
-          <Button
-            color="secondary"
-            className="w-56 bg-gray-300 px-4 py-2"
-            variant="ghost"
-          >
-            Sign in
-          </Button> */}
-          <p>or login with</p>
+
+          <p className="text-gray700">or login with</p>
           <div className="my-5 flex gap-3">
             <button onClick={handleGoogleLogin} className="flex  items-center ">
-              <i class="fa-brands fa-google text-3xl text-white"></i>
+              <i className="fa-brands fa-google text-3xl text-purple500"></i>
             </button>
-            <button onClick={handleGoogleLogin} className="flex  items-center">
-              <i class="fa-brands fa-facebook text-3xl  text-white"></i>
-            </button>
-            <button onClick={handleGoogleLogin} className="flex  items-center">
-              <i class="fa-brands fa-twitter text-3xl  text-white"></i>
+
+            <button
+              onClick={handleGoogleLogin}
+              disabled
+              className="flex  items-center"
+            >
+              <i className="fa-brands fa-facebook text-3xl text-purple500"></i>
             </button>
           </div>
 
-          <div className=" flex">
-            <p className="pr-2">Don't have an account yet?</p>
+          <div className=" mb-5 flex">
+            <p className="pr-2 text-gray700">Don't have an account yet?</p>
             <button
               onClick={() => setRegistering(true)}
-              className="font-semibold "
+              className="font-semibold underline "
             >
               Create one
             </button>
           </div>
         </div>
       ) : (
-        <div className="ml-28 ">
-          Sign up
+        <div className=" l-28 relative mx-auto flex h-full min-h-screen w-2/3 flex-col items-center justify-center rounded-[30px] bg-gray100 p-24">
+          {/* Sign up */}
           {!isNextPage ? (
-            <div>
-              <div>
+            <div className="flex flex-col items-center justify-center">
+              <div className="mb-4 flex flex-col gap-2">
+                <label htmlFor="email">Email</label>
                 <input
                   type="text"
-                  className="border border-black"
+                  className="w-72 rounded-lg px-4 py-2 text-black"
                   ref={emailRef}
                   placeholder="Email"
                 />
               </div>
-              <div>
+              <div className="mb-4 flex flex-col gap-2">
+                <label htmlFor="password">Password</label>
                 <input
                   type="text"
-                  className="border border-black"
+                  className="w-72 rounded-lg px-4 py-2 text-black"
                   ref={passwordRef}
                   placeholder="Password"
                 />
               </div>
-              <div>
-                Name
+              <div className="mb-4 flex flex-col gap-2">
+                <p>Name</p>
                 <input
                   type="text"
-                  className="border border-black"
+                  className="w-72 rounded-lg px-4 py-2 text-black"
                   ref={nameRef}
+                  placeholder="Name"
                 />
               </div>
-              <div>
-                BirthDate
+              <div className="mb-7 flex flex-col gap-2">
+                <p> BirthDate</p>
                 <input
                   name="birthdate"
                   type="date"
                   min="1930-01-01"
                   max={new Date().toISOString().split("T")[0]}
                   ref={birthdateRef}
+                  className="w-72 rounded-lg px-4 py-2 text-black"
                 />
               </div>
-              <div>
-                Location
-                <button onClick={getLocation}>
+              <div className="my-3 flex gap-4">
+                <p> Location</p>
+                <button
+                  onClick={() => {
+                    getLocation();
+                    setIsFetchingLocation(true);
+                  }}
+                  className="text-purple500 underline"
+                >
                   {location
                     ? `${location.country},${location?.city ?? ""}`
-                    : "Get location"}
+                    : isFetchingLocation
+                      ? "Fetching..."
+                      : "Get Location"}
                 </button>
               </div>
-              <button onClick={handleNextPage}>Next</button>
+              <button
+                disabled={
+                  !emailRef.current?.value ||
+                  !passwordRef.current?.value ||
+                  !nameRef.current?.value ||
+                  !birthdateRef.current?.value ||
+                  !location
+                }
+                onClick={() => {
+                  handleNextPage();
+                  console.log(
+                    !emailRef.current?.value,
+                    !passwordRef.current?.value,
+                    !nameRef.current?.value,
+                    !birthdateRef.current?.value,
+                    !location,
+                  );
+                }}
+                className=" my-4 mb-6 w-72 rounded-lg border-2 bg-purple500 px-4 py-2 text-white"
+              >
+                Next
+              </button>
             </div>
           ) : (
-            <div>
-              <button onClick={() => setIsNextPage(false)}>
+            <div className=" flex flex-col items-center justify-center gap-2">
+              <button
+                onClick={() => {
+                  setIsNextPage(false);
+                  setLocation(null);
+                }}
+                className="text-1xl absolute left-16 top-12"
+              >
                 <i className="fa-solid fa-arrow-left"></i>
               </button>
 
-              <div>
-                My native language
-                <select ref={nativeLanguageRef}>
+              <div className="mb-4 flex flex-col gap-2">
+                <small> My native language</small>
+                <select
+                  ref={nativeLanguageRef}
+                  className=" rounded-lg px-4 py-2 text-black"
+                >
                   <option>English</option>
                   <option>繁體中文</option> <option>Français</option>
                   <option>Español</option>
                 </select>
               </div>
-              <div>
-                I can also speak fluently.
-                <select ref={alsoSpeakRef}>
+              <div className="mb-4 flex  flex-col  gap-2">
+                <small> I can also speak fluently</small>
+                <select
+                  ref={alsoSpeakRef}
+                  className="srounded-lg px-4 py-2 text-black"
+                >
                   <option>English</option>
                   <option>繁體中文</option>
                   <option>Français</option>
                   <option>Español</option>
                 </select>
               </div>
-              <div>
-                I am learning
-                <select ref={learningLanguageRef}>
+              <div className="mb-4 flex flex-col gap-2 ">
+                <small> I am learning</small>
+                <div className="flex">
+                  <select
+                    ref={learningLanguageRef}
+                    className="mr-2  rounded-lg px-4 py-2 text-black"
+                  >
+                    <option>English</option>
+                    <option>繁體中文</option>
+                    <option>Français</option>
+                    <option>Español</option>
+                  </select>
+                  <select
+                    ref={learningLanguageLevelRef}
+                    className=" rounded-lg px-4 py-2 text-black"
+                  >
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mb-4 flex flex-col ">
+                <small className="mb-2">
+                  {" "}
+                  Translate received messages into
+                </small>
+                <select
+                  ref={translateRef}
+                  className=" rounded-lg px-4 py-2 text-black"
+                >
                   <option>English</option>
                   <option>繁體中文</option>
                   <option>Français</option>
                   <option>Español</option>
                 </select>
-                <select ref={learningLanguageLevelRef}>
-                  <option>Beginner</option>
-                  <option>Intermediate</option>
-                  <option>Advanced</option>
-                </select>
               </div>
-              <div>
-                Translate received messages into
-                <select ref={translateRef}>
-                  <option>English</option>
-                  <option>繁體中文</option>
-                  <option>Français</option>
-                  <option>Español</option>
-                </select>
-              </div>
-              <div>
-                Communication style
-                <label>
-                  <input
+              <div className="l ">
+                <small className="mb-2"> Communication style</small>
+
+                <div className=" flex">
+                  <label className="mr-3">
+                    <Checkbox
+                      defaultSelected
+                      size="sm"
+                      type="checkbox"
+                      value="textAndVoice"
+                      color="default"
+                      onChange={() => handleCheckboxChange("textAndVoice")}
+                    >
+                      text and voice messages
+                    </Checkbox>
+
+                    {/* <input
                     type="checkbox"
                     value="textAndVoice"
                     onChange={() => handleCheckboxChange("textAndVoice")}
                   />
-                  text and voice messages
-                </label>
-                <label>
-                  <input
+                  text and voice messages */}
+                  </label>
+                  <label className="mr-3">
+                    {/* <input
                     type="checkbox"
                     value="voiceAndVideo"
                     onChange={() => handleCheckboxChange("voiceAndVideo")}
                   />
-                  voice or video calls
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    value="meetings"
-                    onChange={() => handleCheckboxChange("meetings")}
-                  />
-                  in-person meetings
-                </label>
+                  voice or video calls */}
+
+                    <Checkbox
+                      defaultSelected
+                      size="sm"
+                      type="checkbox"
+                      value="voiceAndVideo"
+                      color="default"
+                      onChange={() => handleCheckboxChange("voiceAndVideo")}
+                    >
+                      voice or video calls
+                    </Checkbox>
+                  </label>
+                  <label className="mr-3">
+                    <Checkbox
+                      defaultSelected
+                      size="sm"
+                      type="checkbox"
+                      value="meetings"
+                      color="default"
+                      onChange={() => handleCheckboxChange("meetings")}
+                    >
+                      in-person meetings
+                    </Checkbox>
+                    {/* <input
+                
+                  /> */}
+                  </label>
+                </div>
               </div>
 
-              <button onClick={handleNativeRegister}>Submit</button>
+              <button
+                onClick={handleNativeRegister}
+                className=" my-6 mb-7 w-72 rounded-lg border-2 bg-purple500 px-4 py-2 text-white"
+              >
+                Submit
+              </button>
             </div>
           )}
-          <div>
-            Have you created an account?
-            <button onClick={() => setRegistering(false)}>Login</button>
+          <div className="mb-4 flex">
+            <p className="pr-2 text-gray700"> Have you created an account?</p>
+
+            <button
+              onClick={() => setRegistering(false)}
+              className="font-semibold underline "
+            >
+              Login
+            </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

@@ -5,7 +5,7 @@ import {
   MarkerClusterer,
   SuperClusterAlgorithm,
 } from "@googlemaps/markerclusterer";
-import { isGetAccessor } from "typescript";
+import googleMapApi from "../../utils/googleMapApi";
 
 const containerStyle = {
   width: "120%",
@@ -20,7 +20,6 @@ function MembersMap({ members }) {
   });
   const [map, setMap] = useState(null);
   const onLoad = useCallback(function callback(map) {
-    console.log(userCenter);
     const bounds = new window.google.maps.LatLngBounds(userCenter);
     map.fitBounds(bounds);
 
@@ -32,7 +31,26 @@ function MembersMap({ members }) {
   const [userCenter, setUserCenter] = useState(null);
   const [shownMember, setShownMember] = useState(null);
   const [markerClusterer, setMarkerClusterer] = useState(null);
-
+  const [locationText, setLocationText] = useState("");
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const initialUserCenter = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+      setUserCenter(initialUserCenter);
+    },
+    // 若未開啟位置追蹤，則跳出提示'允許存取使用者位置來使用此功能'
+    () => {
+      Swal.fire({
+        position: "middle",
+        text: "允許存取使用者位置來使用此功能",
+        icon: "warning",
+        showCloseButton: true,
+        showConfirmButton: false,
+      });
+    },
+  );
   //獲取使用者位置
   useEffect(() => {
     //瀏覽器提供的獲取使用者位置的API
@@ -61,16 +79,25 @@ function MembersMap({ members }) {
     if (isLoaded) {
       const markers = members.map((member, i) => {
         const label = member.name;
-        console.log(member);
+
         // 在使用地圖 API 之前，檢查 window.google 是否已經定義
-        if (window.google && window.google.maps) {
+        console.log(member);
+        if (
+          window.google &&
+          window.google.maps &&
+          member?.location?.geopoint?._lat &&
+          member?.location?.geopoint?._long
+        ) {
           // 創建 Google 地圖標記實例
-          console.log(member);
+
           const marker = new window.google.maps.Marker({
-            position: { lat: member.location._lat, lng: member.location._long },
+            position: {
+              lat: member.location.geopoint._lat,
+              lng: member.location.geopoint._long,
+            },
             label,
           });
-          console.log(member);
+
           // 當標記被點擊時，打開信息窗口
           marker.addListener("click", () => {
             setShownMember(member);
@@ -78,7 +105,7 @@ function MembersMap({ members }) {
 
           return marker;
         }
-        return null; // 處理 Google Maps API 尚未載入的情況
+        // return null; // 處理 Google Maps API 尚未載入的情況
       });
 
       const clusterer = new MarkerClusterer({ markers, map });
@@ -86,9 +113,18 @@ function MembersMap({ members }) {
         setMarkerClusterer(clusterer);
       }
     }
-  }, [isLoaded, members, markerClusterer]);
+  }, [isLoaded, members, map]);
 
-  return isLoaded && userCenter ? (
+  useEffect(() => {
+    if (shownMember?.location) {
+      const { latitude, longitude } = shownMember.location.geopoint;
+      googleMapApi.getLocation(latitude, longitude).then((location) => {
+        setLocationText(location);
+      });
+    }
+  }, [shownMember]);
+
+  return isLoaded && userCenter && setShownMember && markerClusterer ? (
     <div className="relative max-h-screen min-w-full overflow-hidden">
       <GoogleMap
         mapContainerStyle={containerStyle}
@@ -108,48 +144,54 @@ function MembersMap({ members }) {
         ></MarkerF>
       </GoogleMap>
       {shownMember && (
-        <div className="z-1000 bg-gray100 fixed right-6 top-6 flex h-[calc(100%-3rem)] w-80 flex-col items-center overflow-hidden rounded-2xl p-6">
-          <div className="absolute bottom-0  flex h-[calc(83%)] w-[calc(100%)] flex-col items-center  bg-white p-6 "></div>
+        <div className="z-1000 fixed right-6 top-6 flex h-[calc(100%-3rem)] w-80 flex-col items-center overflow-hidden rounded-2xl bg-gray100 p-6 shadow">
+          <div className="absolute bottom-0  flex h-[calc(82%)] w-[calc(100%)] flex-col items-center  bg-white p-6 "></div>
           <div className=" relative z-10 flex h-full flex-col items-center justify-center">
-            <div className="border-5 mr-4 box-content h-36 min-h-fit w-36 min-w-fit overflow-visible rounded-xl border-white">
+            <div className="mt-4 box-content h-36 min-h-fit w-36 min-w-fit overflow-visible rounded-xl border-5 border-white">
               <img
-                src={shownMember.profilePicture}
+                src={shownMember?.profilePicture}
                 alt=""
                 className="h-36 w-36 rounded-xl object-cover"
               />
             </div>
 
-            <h2 className="mt-3 text-center text-xl font-semibold text-black">{`${shownMember.name}`}</h2>
-            <div className="border-1 border-gray300  my-3 w-full" />
-            {/* <p className=" mb-1  ">{`${locationText.country},${locationText.city}`}</p> */}
-            <div className="mb-1  mr-auto">
+            <h2 className="mt-3 text-center text-xl font-semibold text-black">{`${shownMember?.name}, 27`}</h2>
+            <p className=" mt-3 text-sm   ">{`${
+              locationText?.country && locationText?.city
+                ? locationText.country + "," + locationText.city
+                : "Private"
+            }`}</p>
+
+            <div className="my-5 w-full  border-1 border-gray300" />
+
+            <div className="mr-auto">
               <small className="pr-2 text-xs font-semibold">Speak</small>
               <small className="pr-2 text-xs">
-                {shownMember.nativeLanguage}
+                {shownMember?.nativeLanguage}
               </small>
 
               <small className="pr-2 text-xs font-semibold">Learning</small>
               <small className="pr-2 text-xs">
-                {shownMember.learningLanguage.learningLanguage}
+                {shownMember?.learningLanguage?.learningLanguage}
               </small>
             </div>
-            {/* <i className="fa-solid fa-quote-right mr-auto flex text-sm "></i> */}
-            <p className="  text-l  mt-1 font-light leading-6">
-              {shownMember.mainTopic}
+
+            <p className="  text-l  my-3 font-light  leading-6">
+              {shownMember?.mainTopic}
             </p>
 
-            <div className="mt-auto flex gap-3">
+            <div className="mt-auto flex w-full flex-col gap-3">
               <Link
-                className="bg-purple100 flex h-10 items-center justify-center rounded-xl p-3"
-                to={`/community/${shownMember.id}`}
+                className="flex h-10 w-full items-center justify-center rounded-xl bg-purple100 p-3"
+                to={`/community/${shownMember?.id}`}
               >
-                <i className="fa-solid fa-user text-purple500 text-l pr-2"></i>
-                <p className=" text-purple500 text-l "> Profile</p>
+                <i className="fa-solid fa-user text-l pr-2 text-purple500"></i>
+                <p className=" text-l text-purple500 ">View Profile</p>
               </Link>
 
-              <button className="bg-purple100 mt-auto flex h-10 items-center justify-center rounded-xl p-3">
-                <i className="fa-solid fa-comment text-purple500 text-l pr-2"></i>
-                <p className=" text-purple500 text-l "> Message</p>
+              <button className="mt-auto flex h-10 items-center justify-center rounded-xl bg-purple100 p-3">
+                <i className="fa-solid fa-comment text-l pr-2 text-purple500"></i>
+                <p className=" text-l text-purple500 "> Message</p>
               </button>
             </div>
           </div>

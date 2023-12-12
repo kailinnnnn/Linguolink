@@ -20,11 +20,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="chatrooms" element={<Chatrooms />}>
           <Route path=":id" element={<Chatroom />} />
         </Route>
-
         <Route path="learning" element={<Learning />} />
         <Route path="profile/:id" element={<Profile />} />
         <Route path="*" element={<Navigate to="signin" replace />} />
-        <Route path="/" element={<Navigate to="signin" replace />} />
       </Route>
     </Routes>
   </BrowserRouter>,

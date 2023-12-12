@@ -52,6 +52,7 @@ const api = {
       const newUser = {
         name: user.displayName,
         email: user.email,
+        id: user.uid,
       };
 
       if (docSnap.exists()) {
@@ -87,7 +88,17 @@ const api = {
       );
       const uid = userCredential.user.uid;
       const userRef = doc(db, "users", uid);
-      const locationData = new GeoPoint(location.lat, location.lng);
+      // const locationData = new GeoPoint(location.lat, location.lng);
+      console.log(location);
+      let locationData = {};
+      if (location) {
+        locationData.geopoint = new GeoPoint(location.lat, location.lng);
+        locationData.placename = {
+          city: location.city,
+          country: location.country,
+        };
+      }
+      console.log(locationData);
       const userData = {
         name,
         email,
@@ -115,6 +126,7 @@ const api = {
           "https://firebasestorage.googleapis.com/v0/b/linguolink-e84b0.appspot.com/o/8ef34a64-68fc-4008-93f0-fa293b0ccc3d?alt=media&token=680f3317-8725-4ee1-8144-e07ee99ed410",
         mainTopic: "",
       };
+      console.log(userData);
       await setDoc(userRef, userData);
       console.log("新用戶已成功創建");
       return { email, password };
@@ -246,17 +258,16 @@ const api = {
   async listenWebRTC(userId, callback) {
     const userChatroomsRef = collection(db, "users", userId, "chatrooms");
     const unsubWebRTCsArr = [];
-    console.log(userChatroomsRef);
+
     const unsubChatrooms = onSnapshot(
       userChatroomsRef,
       async (querySnapshot) => {
-        console.log("trigger Chatrooms monitor"); // webrtc有新寫入時，不會console.log(1)，得證子集和變化不會觸發母集的onSnapshot
+        // webrtc有新寫入時，不會console.log(1)，得證子集和變化不會觸發母集的onSnapshot
 
         querySnapshot.docs.map(async (doc) => {
           const webRTCRef = collection(doc.ref, "webrtc");
 
           const unsubWebRTC = onSnapshot(webRTCRef, (webRtcSnapshot) => {
-            console.log("trigger WebRTC monitor");
             const chatroomWebRTCData = {};
             webRtcSnapshot.forEach((doc) => {
               chatroomWebRTCData[doc.id] = doc.data();
@@ -302,18 +313,6 @@ const api = {
   ) {
     try {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
-      console.log(1);
-      console.log(
-        chatroomId,
-        userId,
-        targetUserId,
-        content,
-        toReviseSent,
-        revised,
-        comment,
-        imageUrl,
-        recordUrl,
-      );
       await updateDoc(chatroomRef, {
         messages: arrayUnion({
           content: content ? content : null,
@@ -382,7 +381,9 @@ const api = {
   async listenUser(userId, callback) {
     try {
       const userRef = doc(db, "users", userId);
+      console.log(userRef);
       const unsubscribe = onSnapshot(userRef, (doc) => {
+        console.log("trigger user monitor", doc.data());
         const userData = doc.data();
         userData.id = doc.id;
         callback(userData);
@@ -418,7 +419,6 @@ const api = {
     try {
       const storageRef = ref(storage, uuidv4());
       const a = await uploadBytes(storageRef, file);
-      console.log(a);
       const url = await getDownloadURL(storageRef);
       console.log(url);
       return url;
@@ -431,7 +431,7 @@ const api = {
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
-        collection: arrayUnion(data),
+        collections: arrayUnion(data),
       });
     } catch (error) {
       console.log(error);
@@ -523,6 +523,42 @@ const api = {
         });
       });
       return unsubscribe;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+
+  async setVideoStatus(chatroomId, userId, targetUserId, status) {
+    try {
+      const chatroomsColVideoStatusRef = doc(
+        db,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "status",
+      );
+      await setDoc(chatroomsColVideoStatusRef, status, { merge: true });
+      const userColVideoStatusRef = doc(
+        db,
+        "users",
+        userId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "status",
+      );
+      await setDoc(userColVideoStatusRef, status, { merge: true });
+      const targetUserColVideoStatusRef = doc(
+        db,
+        "users",
+        targetUserId,
+        "chatrooms",
+        chatroomId,
+        "webrtc",
+        "status",
+      );
+      await setDoc(targetUserColVideoStatusRef, status, { merge: true });
     } catch (error) {
       console.log(error);
       throw error;
@@ -672,6 +708,42 @@ const api = {
     try {
       const userRef = doc(db, "users", userId);
       setDoc(userRef, { profilePicture: url }, { merge: true });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+
+  async deleteUserPhoto(userId, num) {
+    try {
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+      userData.photos[num - 1].url = "";
+      updateDoc(userRef, userData);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  async updateUser(userId, data) {
+    try {
+      const userRef = doc(db, "users", userId);
+      let locationData = {};
+      if (data.location) {
+        locationData.geopoint = new GeoPoint(
+          data.location.lat,
+          data.location.lng,
+        );
+        locationData.placename = {
+          city: data.location.city,
+          country: data.location.country,
+        };
+      }
+
+      data.location = locationData;
+      console.log(data.location);
+      await updateDoc(userRef, data);
     } catch (error) {
       console.log(error);
       throw error;
