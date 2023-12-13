@@ -46,36 +46,39 @@ const Video = ({
         const [remoteStream] = event.streams;
         remoteStreamRef.current.srcObject = remoteStream;
       };
+      peerConnection.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log("send ice candidate to remote");
+          // 將 ICE candidate 通知給對方，這裡使用你的 API 來傳送 candidate
+          api
+            .sendIceCandidateToRemote(
+              chatroomId,
+              user.id,
+              chatPartner.id,
+              event.candidate,
+              userVideoRoleRef.current,
+            )
+            .then(() => {
+              console.log("send ice candidate to remote");
+            });
+        }
+      };
 
       try {
-        peerConnection.current.onicecandidate = (event) => {
-          if (event.candidate) {
-            // 將 ICE candidate 通知給對方，這裡使用你的 API 來傳送 candidate
-            api
-              .sendIceCandidateToRemote(
-                chatroomId,
-                user.id,
-                chatPartner.id,
-                event.candidate,
-                userVideoRoleRef.current,
-              )
-              .then(() => {
-                console.log("send ice candidate to remote");
-              });
-          }
-        };
-
         if (userVideoRoleRef.current === "offer") {
           if (!webRTCInfo?.[0]) {
             await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
               isConnecting: true,
             });
+            console.log("offerer set video status");
             return;
           }
 
           if (webRTCInfo[0] && !webRTCInfo[0]?.offer) {
             const offer = await peerConnection.current.createOffer();
+            console.log("create offer");
             await peerConnection.current.setLocalDescription(offer);
+            console.log("set local description");
             await api.sendOffer(chatroomId, user.id, chatPartner.id, offer);
             console.log("offerer send offer");
             return;
@@ -156,9 +159,8 @@ const Video = ({
       remoteStreamRef.current = null;
       console.log("stop remote stream");
     }
-    peerConnection.current.close();
+    // peerConnection.current.close();
 
-    console.log(2222222222222222);
     await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
       isConnecting: false,
     });

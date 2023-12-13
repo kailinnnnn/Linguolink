@@ -37,30 +37,10 @@ const Profile = () => {
     }
   }, []);
 
-  // useEffect(() => {
-  //   if (user?.location) {
-  //     getLocation();
-  //   }
-  // }, [user]);
-
-  // const getLocation = () => {
-  //   const { latitude, longitude } = user?.location;
-  //   googleMapApi.getLocation(latitude, longitude).then((location) => {
-  //     setLocationText(location);
-  //     setUser({ ...user, location: { ...user.location, ...location } });
-  //   });
-  // };
-
   const updateLocation = () => {
     navigator.geolocation.getCurrentPosition((position) => {
       const { latitude, longitude } = position.coords;
       googleMapApi.getLocation(latitude, longitude).then((location) => {
-        // setLocation({
-        //   lat: latitude,
-        //   lng: longitude,
-        //   city: location.city,
-        //   country: location.country,
-        // });
         api.updateUser(user.id, {
           location: {
             lat: latitude,
@@ -69,8 +49,6 @@ const Profile = () => {
             country: location.country,
           },
         });
-        // const newUser = { ...user, ...changes };
-        // setUser(newUser);
       });
       setIsFetchingLocation(false);
     });
@@ -337,7 +315,7 @@ const Profile = () => {
                     setIsFetchingLocation(true);
                   }}
                 >
-                  <p className="flex items-center justify-center text-purple500 ">
+                  <div className="flex items-center justify-center text-purple500 ">
                     {isFetchingLocation ? (
                       "Fetching..."
                     ) : (
@@ -346,7 +324,7 @@ const Profile = () => {
                         Update
                       </p>
                     )}
-                  </p>
+                  </div>
                 </button>
               </div>
               <div className="relative my-7  w-full border-1 border-gray300" />
@@ -469,7 +447,10 @@ const Profile = () => {
                       //     </button>
                       //   </div>
                       // ) :
-                      <label className="flex h-48 w-72 items-center justify-center rounded-xl bg-gray300">
+                      <label
+                        className="flex h-48 w-72 items-center justify-center rounded-xl bg-gray300"
+                        key={index}
+                      >
                         <input
                           id="fileInput"
                           type="file"

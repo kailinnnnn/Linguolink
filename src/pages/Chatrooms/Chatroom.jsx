@@ -96,6 +96,7 @@ const Chatroom = ({
           );
         });
         setSelectedImage(null);
+        messageRef.current.value = "";
       } else {
         await api.sendMessage(
           chatroomId,
@@ -107,6 +108,7 @@ const Chatroom = ({
 
           commentRef.current?.value,
         );
+        messageRef.current.value = "";
       }
     } catch (e) {
       console.log(e);
@@ -269,20 +271,21 @@ const Chatroom = ({
                           )}
                           {message.revised && (
                             <div className="bg-gray100 p-4">
-                              <p className="mb-2 text-xs"> Revised</p>
+                              <p className="mb-1 text-xs"> Revised</p>
                               <p className="text-red-500">
                                 <i className="fa-solid fa-xmark pr-[0.6rem] text-red500"></i>
                                 {message.toReviseSent}
                               </p>
+                              <div className="mb-2 mt-2  border-1 border-gray300" />
                               <p className=" text-green-500">
-                                <i className="fa-solid fa-check pr-[0.2rem] text-green500"></i>
+                                <i className="fa-solid fa-check pr-[0.6rem] text-green500"></i>
                                 {message.revised}
                               </p>
                             </div>
                           )}
                           {message.comment && (
                             <div className={`p-4 ${messageClass}`}>
-                              <p className=" text-xs ">comment</p>
+                              <p className="mb-1 text-xs ">comment</p>
                               <p>{message.comment}</p>
                             </div>
                           )}
@@ -361,7 +364,15 @@ const Chatroom = ({
                                       </small>
                                       <input
                                         ref={preStoredWordsRef}
-                                        defaultValue={message.content}
+                                        defaultValue={
+                                          selectedMessage.content !== "" &&
+                                          selectedMessage.content !== null
+                                            ? selectedMessage?.content
+                                            : selectedMessage?.comment !== "" &&
+                                                selectedMessage.comment !== null
+                                              ? selectedMessage?.comment
+                                              : selectedMessage?.revised
+                                        }
                                         className=" mb-3 h-8 rounded-lg pl-3  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
                                       />
                                     </div>
@@ -533,9 +544,11 @@ const Chatroom = ({
                 </div>
 
                 <p ref={toCommentSentRef} className=" rounded-xl p-5 pt-2">
-                  {selectedMessage?.content !== ""
+                  {selectedMessage.content !== "" &&
+                  selectedMessage.content !== null
                     ? selectedMessage?.content
-                    : selectedMessage?.comment !== ""
+                    : selectedMessage?.comment !== "" &&
+                        selectedMessage.comment !== null
                       ? selectedMessage?.comment
                       : selectedMessage?.revised}
                 </p>

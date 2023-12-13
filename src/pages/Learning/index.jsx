@@ -97,6 +97,7 @@ const Learning = () => {
 
         {category === "correction" &&
           user?.revised?.map((sent, i) => {
+            console.log(sent);
             return (
               <div
                 className=" h-fit w-fit  max-w-xs rounded-2xl  bg-white p-5"
