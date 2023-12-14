@@ -63,6 +63,12 @@ function App() {
     }
   }, []);
 
+  // useEffect(() => {
+  //   if (user) {
+  //     console.log(user.location);
+  //   }
+  // }, [user]);
+
   return (
     <NextUIProvider>
       <div className="flex min-h-screen w-full min-w-full bg-background text-foreground light">

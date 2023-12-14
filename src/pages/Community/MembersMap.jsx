@@ -10,7 +10,7 @@ import googleMapApi from "../../utils/googleMapApi";
 const containerStyle = {
   width: "120%",
   height: "120vh",
-  transform: " scale(1.5)",
+  transform: " scale(1.2)",
 };
 
 function MembersMap({ members }) {
@@ -19,12 +19,17 @@ function MembersMap({ members }) {
     googleMapsApiKey: "AIzaSyBeawM8HzUy5PhrWyAjdWueZtuUtmhT9E4",
   });
   const [map, setMap] = useState(null);
-  const onLoad = useCallback(function callback(map) {
-    const bounds = new window.google.maps.LatLngBounds(userCenter);
-    map.fitBounds(bounds);
+  // const onLoad = useCallback(function callback(map) {
+  //   const bounds = new window.google.maps.LatLngBounds(userCenter);
+  //   map.fitBounds(bounds);
 
+  //   setMap(map);
+  // }, []);
+
+  const onLoad = useCallback(function callback(map) {
     setMap(map);
   }, []);
+
   const onUnmount = useCallback(function callback(map) {
     setMap(null);
   }, []);
@@ -32,25 +37,7 @@ function MembersMap({ members }) {
   const [shownMember, setShownMember] = useState(null);
   const [markerClusterer, setMarkerClusterer] = useState(null);
   const [locationText, setLocationText] = useState("");
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const initialUserCenter = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      };
-      setUserCenter(initialUserCenter);
-    },
-    // 若未開啟位置追蹤，則跳出提示'允許存取使用者位置來使用此功能'
-    () => {
-      Swal.fire({
-        position: "middle",
-        text: "允許存取使用者位置來使用此功能",
-        icon: "warning",
-        showCloseButton: true,
-        showConfirmButton: false,
-      });
-    },
-  );
+
   //獲取使用者位置
   useEffect(() => {
     //瀏覽器提供的獲取使用者位置的API
@@ -116,7 +103,7 @@ function MembersMap({ members }) {
   }, [isLoaded, members, map]);
 
   useEffect(() => {
-    if (shownMember?.location) {
+    if (shownMember?.location?.geopoint) {
       const { latitude, longitude } = shownMember.location.geopoint;
       googleMapApi.getLocation(latitude, longitude).then((location) => {
         setLocationText(location);

@@ -26,6 +26,7 @@ const Chatrooms = () => {
     return formattedTime;
   };
 
+  console.log(user, chatrooms);
   return (
     <div className=" flex h-full max-h-full w-[calc(100%)]  bg-white pl-24">
       {chatrooms && (
@@ -99,12 +100,12 @@ const Chatrooms = () => {
                 </Link>
               );
             })}
-            {chatrooms.map((chatroom, i) => {
+            {/* {chatrooms.map((chatroom, i) => {
               const chatPartner = chatroom.participants.find(
                 (participant) => participant.id !== user.id,
               );
               const createdAt = timestampToTime(
-                chatroom.messages[chatroom.messages.length - 1]?.createdAt,
+                chatroom.messages[chatroom.messages?.length - 1]?.createdAt,
               );
 
               return (
@@ -137,19 +138,19 @@ const Chatrooms = () => {
                     </div>
                     <div className="h-5 w-60 overflow-hidden ">
                       <p className="overflow-hidden overflow-ellipsis whitespace-normal text-gray500 ">
-                        {chatroom.messages[chatroom.messages.length - 1]
+                        {chatroom?.messages[chatroom.messages?.length - 1]
                           ?.content !== "" &&
-                        chatroom.messages[chatroom.messages.length - 1]
+                        chatroom.messages[chatroom.messages?.length - 1]
                           ?.content !== null
-                          ? chatroom.messages[chatroom.messages.length - 1]
+                          ? chatroom.messages[chatroom.messages?.length - 1]
                               ?.content
-                          : chatroom.messages[chatroom.messages.length - 1]
+                          : chatroom.messages[chatroom.messages?.length - 1]
                                 ?.comment !== "" &&
-                              chatroom.messages[chatroom.messages.length - 1]
+                              chatroom.messages[chatroom.messages?.length - 1]
                                 ?.comment !== null
-                            ? chatroom.messages[chatroom.messages.length - 1]
+                            ? chatroom.messages[chatroom.messages?.length - 1]
                                 ?.comment
-                            : chatroom.messages[chatroom.messages.length - 1]
+                            : chatroom.messages[chatroom.messages?.length - 1]
                                 ?.revised}
                       </p>
                     </div>
@@ -162,7 +163,7 @@ const Chatrooms = () => {
                 (participant) => participant.id !== user.id,
               );
               const createdAt = timestampToTime(
-                chatroom.messages[chatroom.messages.length - 1]?.createdAt,
+                chatroom.messages[chatroom.messages?.length - 1]?.createdAt,
               );
 
               return (
@@ -195,26 +196,26 @@ const Chatrooms = () => {
                     </div>
                     <div className="h-5 w-60 overflow-hidden ">
                       <p className="overflow-hidden overflow-ellipsis whitespace-normal text-gray500 ">
-                        {chatroom.messages[chatroom.messages.length - 1]
+                        {chatroom?.messages[chatroom.messages?.length - 1]
                           ?.content !== "" &&
-                        chatroom.messages[chatroom.messages.length - 1]
+                        chatroom.messages[chatroom.messages?.length - 1]
                           ?.content !== null
-                          ? chatroom.messages[chatroom.messages.length - 1]
+                          ? chatroom.messages[chatroom.messages?.length - 1]
                               ?.content
-                          : chatroom.messages[chatroom.messages.length - 1]
+                          : chatroom.messages[chatroom.messages?.length - 1]
                                 ?.comment !== "" &&
-                              chatroom.messages[chatroom.messages.length - 1]
+                              chatroom.messages[chatroom.messages?.length - 1]
                                 ?.comment !== null
-                            ? chatroom.messages[chatroom.messages.length - 1]
+                            ? chatroom.messages[chatroom.messages?.length - 1]
                                 ?.comment
-                            : chatroom.messages[chatroom.messages.length - 1]
+                            : chatroom.messages[chatroom.messages?.length - 1]
                                 ?.revised}
                       </p>
                     </div>
                   </div>
                 </Link>
               );
-            })}
+            })} */}
           </div>
         </div>
       )}

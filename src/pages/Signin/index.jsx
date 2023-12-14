@@ -42,7 +42,7 @@ const Signin = () => {
     if (isLogin) {
       navigate("/community");
     }
-  }, []);
+  }, [isLogin]);
 
   const handleGoogleLogin = async function () {
     const user = await api.loginWithGoogle();

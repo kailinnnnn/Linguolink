@@ -398,6 +398,7 @@ const api = {
     targetUserId,
     wrongSentence,
     correctedSentence,
+    comment,
     chatroomId,
   ) {
     try {
@@ -405,8 +406,10 @@ const api = {
       const revised = {
         wrongSentence: wrongSentence,
         correctedSentence: correctedSentence,
+        comment: comment,
         chatroomId: chatroomId,
       };
+      console.log(revised);
       await updateDoc(userRef, {
         revised: arrayUnion(revised),
       });

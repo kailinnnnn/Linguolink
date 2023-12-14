@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/firebaseApi";
 import MembersMap from "./MembersMap";
-import { user } from "@nextui-org/react";
+import useAuthStore from "../../zustand/AuthStore";
 
 const Community = () => {
   const [members, setMembers] = useState([]);
   const [showPage, setShowPage] = useState("allMembers");
   const [scrollPosition, setScrollPosition] = useState(0);
+  const { user } = useAuthStore();
+
   useEffect(() => {
     async function getAllMembers() {
       const response = await api.getAllMembers();
@@ -26,6 +28,15 @@ const Community = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    members.filter((member) => {
+      console.log(member);
+      if (member.location == {}) {
+        return member;
+      }
+    });
+  }, [members]);
 
   return (
     <div
@@ -90,50 +101,54 @@ const Community = () => {
         flex-wrap  gap-5 pt-6`}
         >
           {members.map((member, index) => {
-            return (
-              <Link
-                key={index}
-                to={`/community/${member?.id}`}
-                state={{ member }}
-                className="flex h-fit w-[calc(49%)] rounded-2xl bg-white p-4 "
-              >
-                <div className="mr-4 h-36 min-h-fit w-36 min-w-fit overflow-visible rounded-xl">
-                  <img
-                    src={member?.profilePicture}
-                    alt=""
-                    className="h-36 w-36 rounded-xl object-cover"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <div className="">
-                    <p className="font-semibold text-black">{member?.name}</p>
-                    <i className="fa-solid fa-quote-right text-main"></i>
+            if (member.id !== user.id) {
+              return (
+                <Link
+                  key={index}
+                  to={`/community/${member?.id}`}
+                  state={{ member }}
+                  className="flex h-fit w-[calc(49%)] rounded-2xl bg-white p-4 "
+                >
+                  <div className="mr-4 h-36 min-h-fit w-36 min-w-fit overflow-visible rounded-xl">
+                    <img
+                      src={member?.profilePicture}
+                      alt=""
+                      className="h-36 w-36 rounded-xl object-cover"
+                    />
                   </div>
+                  <div className="flex flex-col">
+                    <div className="">
+                      <p className="font-semibold text-black">{member?.name}</p>
+                      <i className="fa-solid fa-quote-right text-main"></i>
+                    </div>
 
-                  <p className="leading-6 text-black">{member?.age}</p>
+                    <p className="leading-6 text-black">{member?.age}</p>
 
-                  <div className="h-12 w-full overflow-hidden ">
-                    {" "}
-                    <p className=" overflow-ellipsis leading-6 text-black">
-                      {member?.mainTopic}
-                    </p>
+                    <div className="h-12 w-full overflow-hidden ">
+                      {" "}
+                      <p className=" overflow-ellipsis leading-6 text-black">
+                        {member?.mainTopic}
+                      </p>
+                    </div>
+                    <div className="mb-1 mt-auto">
+                      <small className="pr-2 text-xs font-semibold">
+                        Speak
+                      </small>
+                      <small className="pr-2 text-xs">
+                        {member?.nativeLanguage}
+                      </small>
+
+                      <small className="pr-2 text-xs font-semibold">
+                        Learning
+                      </small>
+                      <small className="pr-2 text-xs">
+                        {member?.learningLanguage?.learningLanguage}
+                      </small>
+                    </div>
                   </div>
-                  <div className="mb-1 mt-auto">
-                    <small className="pr-2 text-xs font-semibold">Speak</small>
-                    <small className="pr-2 text-xs">
-                      {member?.nativeLanguage}
-                    </small>
-
-                    <small className="pr-2 text-xs font-semibold">
-                      Learning
-                    </small>
-                    <small className="pr-2 text-xs">
-                      {member?.learningLanguage?.learningLanguage}
-                    </small>
-                  </div>
-                </div>
-              </Link>
-            );
+                </Link>
+              );
+            }
           })}
         </div>
       ) : (

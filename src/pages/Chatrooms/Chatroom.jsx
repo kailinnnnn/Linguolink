@@ -119,8 +119,8 @@ const Chatroom = ({
     await api.addUserRevised(
       chatPartner.id,
       toReviseSentRef.current.textContent,
-      toCommentSentRef.current?.textContent,
       revisedRef.current.value,
+      commentRef.current?.value,
       chatroomId,
     );
   };
@@ -595,7 +595,7 @@ const Chatroom = ({
                       e.target.value = null;
                     }}
                     onChange={(e) => {
-                      if (e.target.files.length > 0) {
+                      if (e.target?.files?.length > 0) {
                         setSelectedImage(e.target.files[0]);
                       }
                     }}
