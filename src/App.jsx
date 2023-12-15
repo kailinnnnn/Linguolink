@@ -6,7 +6,7 @@ import useAuthStore from "./zustand/AuthStore";
 import useChatroomsStore from "./zustand/ChatroomsStore";
 import useWebRTCStore from "./zustand/webRTCStore";
 import { NextUIProvider } from "@nextui-org/react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 function App() {
   const { user, login, setUser, isLogin } = useAuthStore();
   const { setChatrooms } = useChatroomsStore();
@@ -38,12 +38,12 @@ function App() {
 
   useEffect(() => {
     if (isLogin) {
-      const unsubChatrooms = api.listenWebRTC(user.id, (webRTCData) => {
+      const unsubWebRTC = api.listenWebRTCtest(user.id, (webRTCData) => {
         setWebRTCInfo(webRTCData);
       });
 
       return () => {
-        unsubChatrooms;
+        unsubWebRTC;
       };
     }
   }, [isLogin]);

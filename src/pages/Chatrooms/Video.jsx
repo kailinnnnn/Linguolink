@@ -11,9 +11,9 @@ const Video = ({
 }) => {
   const { user } = useAuthStore();
   const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
+  const streamRef = useRef(null);
   const localStreamRef = useRef(new MediaStream());
   const remoteStreamRef = useRef(new MediaStream());
-
   const configuration = {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
@@ -33,14 +33,19 @@ const Video = ({
 
   useEffect(() => {
     const startVideoCall = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        // audio: true,
+      streamRef.current = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
+        audio: true,
       });
 
-      stream
+      streamRef.current
         .getTracks()
-        .forEach((track) => peerConnection.current.addTrack(track, stream));
+        .forEach((track) =>
+          peerConnection.current.addTrack(track, streamRef.current),
+        );
 
       peerConnection.current.ontrack = (event) => {
         const [remoteStream] = event.streams;
@@ -61,6 +66,7 @@ const Video = ({
             .then(() => {
               console.log("send ice candidate to remote");
             });
+          peerConnection.current.onicecandidate = null;
         }
       };
 
@@ -129,11 +135,8 @@ const Video = ({
             // });
           }
         }
-        // console.log(localStreamRef.current, localStreamRef.current.srcObject);
 
-        if (localStreamRef.current) {
-          localStreamRef.current.srcObject = stream;
-        }
+        localStreamRef.current.srcObject = streamRef.current;
       } catch (error) {
         console.error("Error starting video call:", error);
       }
@@ -143,23 +146,35 @@ const Video = ({
   }, [webRTCInfo]);
 
   const handleEndVideoCall = async () => {
-    console.log(localStreamRef?.current?.srcObject?.getTracks());
-    if (localStreamRef.current && localStreamRef.current.srcObject) {
-      localStreamRef.current.srcObject.getTracks().forEach((track) => {
+    // console.log(localStreamRef);
+    // if (localStreamRef.current.srcObject) {
+    //   localStreamRef.current.srcObject.getTracks().forEach((track) => {
+    //     track.stop();
+    //   });
+    //   localStreamRef.current = null;
+    //   console.log("stop local stream");
+    // }
+
+    // console.log(remoteStreamRef);
+    // if (remoteStreamRef.current.srcObject) {
+    //   remoteStreamRef.current.srcObject
+    //     .getTracks()
+    //     .forEach((track) => track.stop());
+    //   remoteStreamRef.current = null;
+    //   console.log("stop remote stream");
+    // }
+    // if (streamRef.current) {
+    //   streamRef.current.getTracks().forEach((track) => track.stop());
+    //   streamRef.current = null;
+    //   console.log("stop stream");
+    // }
+    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+      stream.getTracks().forEach(function (track) {
         track.stop();
       });
-      localStreamRef.current = null;
-      console.log("stop local stream");
-    }
-    console.log(remoteStreamRef?.current?.srcObject?.getTracks());
-    if (remoteStreamRef.current && remoteStreamRef.current.srcObject) {
-      remoteStreamRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      remoteStreamRef.current = null;
-      console.log("stop remote stream");
-    }
-    // peerConnection.current.close();
+    });
+
+    peerConnection.current.close();
 
     await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
       isConnecting: false,
@@ -193,6 +208,8 @@ const Video = ({
               playsInline
               muted={false}
               ref={remoteStreamRef}
+              width={640}
+              height={480}
             ></video>
           </div>
           <div className="flex flex-grow flex-col overflow-hidden ">
@@ -201,6 +218,8 @@ const Video = ({
               playsInline
               muted={false}
               ref={localStreamRef}
+              width={640}
+              height={480}
             ></video>
           </div>
         </div>

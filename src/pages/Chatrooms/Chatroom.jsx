@@ -1,5 +1,5 @@
 import api from "../../utils/firebaseApi";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useParams } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import useWebRTCStore from "../../zustand/webRTCStore";
@@ -39,6 +39,7 @@ const Chatroom = ({
   const noteRef = useRef(null);
   const menuRef = useRef(null);
   const menuIndexRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
     if (chatroomId) {
@@ -67,18 +68,26 @@ const Chatroom = ({
     if (
       userVideoRoleRef.current === "answer" &&
       webRTCInfo?.[0]?.offer &&
-      webRTCInfo?.[0].status?.isConnecting &&
+      webRTCInfo?.[0]?.isConnecting &&
       !webRTCInfo?.[0]?.offerIceCandidates &&
       !webRTCInfo?.[0]?.answerIceCandidates &&
       !webRTCInfo?.[0]?.answer
     ) {
+      console.log("answer");
       setIsVideoOpen(true);
     }
 
-    if (!webRTCInfo?.[0]?.status?.isConnecting) {
+    if (!webRTCInfo?.[0]?.isConnecting) {
       setIsVideoOpen(false);
     }
   }, [webRTCInfo]);
+
+  useLayoutEffect(() => {
+    if (chatContainerRef.current) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current;
+      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+    }
+  }, [chatroomData?.messages]);
 
   const handleSendMessage = async () => {
     try {
@@ -119,7 +128,7 @@ const Chatroom = ({
     await api.addUserRevised(
       chatPartner.id,
       toReviseSentRef.current.textContent,
-      toCommentSentRef.current?.textContent,
+      commentRef.current?.value,
       revisedRef.current.value,
       chatroomId,
     );
@@ -208,7 +217,10 @@ const Chatroom = ({
               <i className="fa-solid  fa-ellipsis-vertical text-xl text-white"></i>
             </button>
           </header>
-          <div className=" my-[104px]  max-h-[calc(100vh-218px)] w-full overflow-hidden overflow-y-auto px-6">
+          <div
+            className=" my-[104px]  max-h-[calc(100vh-218px)] w-full overflow-hidden overflow-y-auto px-6"
+            ref={chatContainerRef}
+          >
             {chatPartner &&
               chatroomData &&
               chatroomData.messages.map((message, index) => {
@@ -490,6 +502,13 @@ const Chatroom = ({
                             ? selectedMessage?.comment
                             : selectedMessage?.revised
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSendMessage();
+                          handleReviseMessage();
+                          setInputCategory("message");
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -499,6 +518,13 @@ const Chatroom = ({
                     ref={commentRef}
                     className="h-10 w-full max-w-full flex-1 flex-grow rounded-xl bg-gray100 pl-5  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
                     placeholder="Type your message here... "
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSendMessage();
+                        handleReviseMessage();
+                        setInputCategory("message");
+                      }
+                    }}
                   />
                   <button
                     onClick={() => {
@@ -559,6 +585,12 @@ const Chatroom = ({
                     ref={commentRef}
                     className="h-10 w-full max-w-full flex-1 flex-grow rounded-xl bg-gray100 pl-5  focus:border-2   focus:border-purple300 focus:outline-none  focus:ring-purple300"
                     placeholder="Type your comment here... "
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSendMessage();
+                        setInputCategory("message");
+                      }
+                    }}
                   />
                   <button
                     onClick={() => {
@@ -599,7 +631,6 @@ const Chatroom = ({
                         setSelectedImage(e.target.files[0]);
                       }
                     }}
-                    // onChange={handleFileUpload}
                     accept="image/*"
                   />
                   <i
@@ -613,6 +644,11 @@ const Chatroom = ({
                   ref={messageRef}
                   className="h-10 w-full max-w-full flex-1 rounded-full bg-gray100 pl-5  focus:outline-none "
                   placeholder="Type your message here... "
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSendMessage();
+                    }
+                  }}
                 />
 
                 <button

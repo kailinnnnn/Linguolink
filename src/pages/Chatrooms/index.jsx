@@ -25,7 +25,17 @@ const Chatrooms = () => {
     );
     return formattedTime;
   };
+  useEffect(() => {
+    console.log(isVideoOpen);
+  }, [isVideoOpen]);
 
+  //＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊尚未了解＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+  const sortedChatrooms = chatrooms.sort((a, b) => {
+    const aTime = a.messages[a.messages.length - 1]?.createdAt || new Date(0);
+    const bTime = b.messages[b.messages.length - 1]?.createdAt || new Date(0);
+    return bTime - aTime;
+  });
+  //＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊尚未了解＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
   return (
     <div className=" flex h-full max-h-full w-[calc(100%)]  bg-white pl-24">
       {chatrooms && (
@@ -41,7 +51,7 @@ const Chatrooms = () => {
           />
 
           <div className=" flex max-h-[calc(100%-128px)] w-full flex-grow flex-col overflow-auto overflow-y-auto">
-            {chatrooms.map((chatroom, i) => {
+            {sortedChatrooms.map((chatroom, i) => {
               const chatPartner = chatroom.participants.find(
                 (participant) => participant.id !== user.id,
               );
