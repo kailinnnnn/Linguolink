@@ -9,12 +9,10 @@ const Learning = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
 
   useEffect(() => {
-    console.log(category);
-  }, [category]);
-
-  useEffect(() => {
     const handleScroll = () => {
+      // if (window.scrollY > 40) {
       setScrollPosition(window.scrollY);
+      // }
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -32,10 +30,6 @@ const Learning = () => {
             : "border-b-2 border-gray300 bg-gray100"
         }`}
       >
-        {/* <h1 className="mb-4 w-full pl-2 text-2xl font-semibold text-black">
-          Learning
-        </h1> */}
-
         {scrollPosition === 0 && (
           <h1 className={` mb-3 w-full pl-2 text-2xl font-semibold text-black`}>
             Learning
@@ -97,7 +91,6 @@ const Learning = () => {
 
         {category === "correction" &&
           user?.revised?.map((sent, i) => {
-            console.log(sent);
             return (
               <div
                 className=" h-fit w-fit  max-w-xs rounded-2xl  bg-white p-5"

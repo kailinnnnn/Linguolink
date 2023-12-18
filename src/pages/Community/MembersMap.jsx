@@ -1,5 +1,6 @@
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import { useState, useCallback, useEffect } from "react";
+import ReactLoading from "react-loading";
 import { Link } from "react-router-dom";
 import {
   MarkerClusterer,
@@ -19,6 +20,7 @@ function MembersMap({ members }) {
     googleMapsApiKey: "AIzaSyBeawM8HzUy5PhrWyAjdWueZtuUtmhT9E4",
   });
   const [map, setMap] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   // const onLoad = useCallback(function callback(map) {
   //   const bounds = new window.google.maps.LatLngBounds(userCenter);
   //   map.fitBounds(bounds);
@@ -186,7 +188,14 @@ function MembersMap({ members }) {
       )}
     </div>
   ) : (
-    <></>
+    <div className="flex h-screen min-w-full items-center justify-center overflow-hidden pb-10">
+      <ReactLoading
+        type="spin"
+        color="#9d6cff"
+        height={"7.5%"}
+        width={"7.5%"}
+      />
+    </div>
   );
 }
 

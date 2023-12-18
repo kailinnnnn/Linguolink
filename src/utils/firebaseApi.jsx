@@ -369,6 +369,7 @@ const api = {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
       const unsubscribe = onSnapshot(chatroomRef, (doc) => {
         const chatroomData = doc.data();
+        console.log(chatroomData);
         chatroomData.id = doc.id;
         callback(chatroomData);
       });

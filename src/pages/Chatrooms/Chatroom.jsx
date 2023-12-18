@@ -93,8 +93,8 @@ const Chatroom = ({
         event.target,
       );
       const isClickedOutside =
-        selectedMessageTag.tag &&
-        !selectedMessageTag.tag.contains(event.target);
+        selectedMessageTag?.tag &&
+        !selectedMessageTag?.tag.contains(event.target);
 
       if (isClickedOutside) {
         // 點擊了訊息之外的地方，關閉表單
