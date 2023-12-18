@@ -238,13 +238,17 @@ const Profile = () => {
                 />
                 {editingBlock === "name" ? (
                   <>
-                    <button onClick={() => setEditingBlock(null)}>
+                    <button
+                      onClick={() => setEditingBlock(null)}
+                      className="ml-5 text-gray500 "
+                    >
                       Cancel
                     </button>
                     <button
                       onClick={() => {
                         handleSaveChanges({ name: nameRef.current.value });
                       }}
+                      className="ml-3 text-purple500 "
                     >
                       Save
                     </button>
@@ -278,7 +282,10 @@ const Profile = () => {
                 />
                 {editingBlock === "birthdate" ? (
                   <>
-                    <button onClick={() => setEditingBlock(null)}>
+                    <button
+                      onClick={() => setEditingBlock(null)}
+                      className="ml-5 text-gray500 "
+                    >
                       Cancel
                     </button>
                     <button
@@ -287,6 +294,7 @@ const Profile = () => {
                           birthdate: birthdateRef.current.value,
                         });
                       }}
+                      className="ml-3 text-purple500 "
                     >
                       Save
                     </button>
@@ -334,7 +342,10 @@ const Profile = () => {
                   <p className={`${titleStyles} m-0`}> About Me</p>
                   {editingBlock === "aboutMe" ? (
                     <>
-                      <button onClick={() => setEditingBlock(null)}>
+                      <button
+                        onClick={() => setEditingBlock(null)}
+                        className=" text-gray500 "
+                      >
                         Cancel
                       </button>
                       <button
@@ -348,6 +359,7 @@ const Profile = () => {
                             },
                           });
                         }}
+                        className="ml-3 mr-auto text-purple500"
                       >
                         Save
                       </button>
@@ -543,14 +555,17 @@ const Profile = () => {
           {selectedCategory === "mainTopic" && (
             <>
               <div>
-                <div className="flex ">
+                <div className="flex  items-center ">
                   <p className={`${titleStyles} `}> My Topics</p>
                   {/* <button className="mr-auto flex items-center justify-center text-purple500">
                     <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
                   </button> */}
                   {editingBlock === "mainTopic" ? (
                     <>
-                      <button onClick={() => setEditingBlock(null)}>
+                      <button
+                        onClick={() => setEditingBlock(null)}
+                        className=" text-gray500 "
+                      >
                         Cancel
                       </button>
                       <button
@@ -559,6 +574,7 @@ const Profile = () => {
                             mainTopic: mainTopicRef.current.value,
                           });
                         }}
+                        className="ml-3 text-purple500 "
                       >
                         Save
                       </button>

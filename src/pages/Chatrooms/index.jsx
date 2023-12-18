@@ -30,7 +30,7 @@ const Chatrooms = () => {
   }, [isVideoOpen]);
 
   //＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊尚未了解＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
-  const sortedChatrooms = chatrooms.sort((a, b) => {
+  const sortedChatrooms = chatrooms?.sort((a, b) => {
     const aTime = a.messages[a.messages.length - 1]?.createdAt || new Date(0);
     const bTime = b.messages[b.messages.length - 1]?.createdAt || new Date(0);
     return bTime - aTime;
@@ -52,122 +52,6 @@ const Chatrooms = () => {
 
           <div className=" flex max-h-[calc(100%-128px)] w-full flex-grow flex-col overflow-auto overflow-y-auto">
             {sortedChatrooms.map((chatroom, i) => {
-              const chatPartner = chatroom.participants.find(
-                (participant) => participant.id !== user.id,
-              );
-              const createdAt = timestampToTime(
-                chatroom.messages[chatroom.messages.length - 1]?.createdAt,
-              );
-
-              return (
-                <Link
-                  className={`flex h-fit items-center px-6 py-4 ${
-                    chatroom.id === chatroomId && "bg-gray300"
-                  } `}
-                  to={`/chatrooms/${chatroom.id}`}
-                  onClick={() => {
-                    setChatPartner(chatPartner);
-                  }}
-                  key={i}
-                >
-                  <div className="mr-4  flex h-16 min-h-fit w-16 min-w-fit items-center overflow-visible rounded-full border-white">
-                    <img
-                      src={chatPartner.profilePicture}
-                      alt=""
-                      className="h-16 w-16 rounded-full object-cover"
-                    />
-                  </div>
-
-                  <div className="w-full flex-col">
-                    <div className="mb-1 flex items-center justify-between">
-                      <p className=" whitespace-nowrap pr-3 font-semibold uppercase">
-                        {chatPartner.name}
-                      </p>
-                      <small className="ml-auto  flex text-gray500 ">
-                        {createdAt}
-                      </small>
-                    </div>
-                    <div className="h-5 w-60 overflow-hidden ">
-                      <p className="overflow-hidden overflow-ellipsis whitespace-normal text-gray500 ">
-                        {chatroom.messages[chatroom.messages.length - 1]
-                          ?.content !== "" &&
-                        chatroom.messages[chatroom.messages.length - 1]
-                          ?.content !== null
-                          ? chatroom.messages[chatroom.messages.length - 1]
-                              ?.content
-                          : chatroom.messages[chatroom.messages.length - 1]
-                                ?.comment !== "" &&
-                              chatroom.messages[chatroom.messages.length - 1]
-                                ?.comment !== null
-                            ? chatroom.messages[chatroom.messages.length - 1]
-                                ?.comment
-                            : chatroom.messages[chatroom.messages.length - 1]
-                                ?.revised}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-            {chatrooms.map((chatroom, i) => {
-              const chatPartner = chatroom.participants.find(
-                (participant) => participant.id !== user.id,
-              );
-              const createdAt = timestampToTime(
-                chatroom.messages[chatroom.messages.length - 1]?.createdAt,
-              );
-
-              return (
-                <Link
-                  className={`flex h-fit items-center px-6 py-4 ${
-                    chatroom.id === chatroomId && "bg-gray300"
-                  } `}
-                  to={`/chatrooms/${chatroom.id}`}
-                  onClick={() => {
-                    setChatPartner(chatPartner);
-                  }}
-                  key={i}
-                >
-                  <div className="mr-4  flex h-16 min-h-fit w-16 min-w-fit items-center overflow-visible rounded-full border-white">
-                    <img
-                      src={chatPartner.profilePicture}
-                      alt=""
-                      className="h-16 w-16 rounded-full object-cover"
-                    />
-                  </div>
-
-                  <div className="w-full flex-col">
-                    <div className="mb-1 flex items-center justify-between">
-                      <p className=" whitespace-nowrap pr-3 font-semibold uppercase">
-                        {chatPartner.name}
-                      </p>
-                      <small className="ml-auto  flex text-gray500 ">
-                        {createdAt}
-                      </small>
-                    </div>
-                    <div className="h-5 w-60 overflow-hidden ">
-                      <p className="overflow-hidden overflow-ellipsis whitespace-normal text-gray500 ">
-                        {chatroom.messages[chatroom.messages.length - 1]
-                          ?.content !== "" &&
-                        chatroom.messages[chatroom.messages.length - 1]
-                          ?.content !== null
-                          ? chatroom.messages[chatroom.messages.length - 1]
-                              ?.content
-                          : chatroom.messages[chatroom.messages.length - 1]
-                                ?.comment !== "" &&
-                              chatroom.messages[chatroom.messages.length - 1]
-                                ?.comment !== null
-                            ? chatroom.messages[chatroom.messages.length - 1]
-                                ?.comment
-                            : chatroom.messages[chatroom.messages.length - 1]
-                                ?.revised}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-            {chatrooms.map((chatroom, i) => {
               const chatPartner = chatroom.participants.find(
                 (participant) => participant.id !== user.id,
               );

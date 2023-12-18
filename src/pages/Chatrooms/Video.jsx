@@ -168,11 +168,6 @@ const Video = ({
     //   streamRef.current = null;
     //   console.log("stop stream");
     // }
-    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-      stream.getTracks().forEach(function (track) {
-        track.stop();
-      });
-    });
 
     peerConnection.current.close();
 

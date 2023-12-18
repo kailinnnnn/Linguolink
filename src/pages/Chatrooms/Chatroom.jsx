@@ -6,6 +6,7 @@ import useWebRTCStore from "../../zustand/webRTCStore";
 import MessageList from "./MessageList";
 import Record from "./Record";
 import Video from "./Video";
+import { faLadderWater } from "@fortawesome/free-solid-svg-icons";
 
 const Chatroom = ({
   chatPartner,
@@ -20,6 +21,7 @@ const Chatroom = ({
   const [isMenuOpenArray, setIsMenuOpenArray] = useState(
     Array(chatroomData?.messages?.length || 0).fill(false),
   );
+  const [selectedMessageTag, setSelectedMessageTag] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isReviseOpen, setIsReviseOpen] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
@@ -81,6 +83,39 @@ const Chatroom = ({
       setIsVideoOpen(false);
     }
   }, [webRTCInfo]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      console.log(
+        "contains",
+        selectedMessageTag?.tag?.contains(event.target),
+        selectedMessageTag?.tag,
+        event.target,
+      );
+      const isClickedOutside =
+        selectedMessageTag.tag &&
+        !selectedMessageTag.tag.contains(event.target);
+
+      if (isClickedOutside) {
+        // 點擊了訊息之外的地方，關閉表單
+        console.log("Clicked outside of message");
+        const newIsMenuOpenArray = [...isMenuOpenArray];
+        newIsMenuOpenArray[selectedMessageTag.index] = false;
+        setIsMenuOpenArray(newIsMenuOpenArray);
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [selectedMessageTag]);
+
+  useEffect(() => {
+    console.log(isMenuOpen);
+  });
 
   useLayoutEffect(() => {
     if (chatContainerRef.current) {
@@ -254,19 +289,25 @@ const Chatroom = ({
                         className={` relative flex w-fit items-center rounded-xl  bg-white ${
                           message.sender == user.id ? "ml-auto" : "mr-auto"
                         } `}
+                        onMouseEnter={(e) => {
+                          if (message.sender !== user.id) {
+                            const newIsMenuOpenArray = Array(
+                              isMenuOpenArray.length,
+                            ).fill(false);
+                            newIsMenuOpenArray[index] =
+                              !newIsMenuOpenArray[index];
+                            setIsMenuOpenArray(newIsMenuOpenArray);
+                            setSelectedMessage(message);
+                            setSelectedMessageTag({
+                              tag: e.currentTarget,
+                              index: index,
+                            });
+                          }
+                        }}
                       >
                         <div
                           className="overflow-hidden rounded-xl"
-                          onClick={() => {
-                            if (message.sender !== user.id) {
-                              const newIsMenuOpenArray = [...isMenuOpenArray];
-                              newIsMenuOpenArray[index] =
-                                !newIsMenuOpenArray[index];
-                              setIsMenuOpenArray(newIsMenuOpenArray);
-                              setSelectedMessage(message);
-                              console.log(selectedMessage);
-                            }
-                          }}
+                          onClick={(e) => {}}
                         >
                           {message.recordUrl && (
                             <audio
@@ -324,7 +365,7 @@ const Chatroom = ({
                                     className="px-3 py-2 hover:text-purple500"
                                     onClick={() => {
                                       setInputCategory("revise");
-                                      setIsMenuOpen(!isMenuOpen);
+                                      setIsMenuOpen(false);
 
                                       const newIsMenuOpenArray = [
                                         ...isMenuOpenArray,
