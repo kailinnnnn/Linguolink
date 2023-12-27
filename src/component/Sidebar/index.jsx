@@ -10,29 +10,33 @@ const iconStyles = "block text-xl text-gray500 ";
 const Header = () => {
   const { user, isLogin } = useAuthStore();
   const [currentCategory, setCurrentCategory] = useState("community");
-  const { isVideoOpen, setIsVideoOpen } = useVideoStore();
+  const { isVideoOpen } = useVideoStore();
   const location = useLocation();
 
   useEffect(() => {
-    // 根據路徑進行相應的處理
     const path = location.pathname.split("/")[1];
-    switch (path) {
-      case "profile":
-        setCurrentCategory("profile");
-        break;
-      case "community":
-        setCurrentCategory("community");
-        break;
-      case "chatrooms":
-        setCurrentCategory("chatrooms");
-        break;
-      case "learning":
-        setCurrentCategory("learning");
-        break;
-      default:
-        break;
+    const categoryMap = {
+      profile: "profile",
+      community: "community",
+      chatrooms: "chatrooms",
+      learning: "learning",
+    };
+
+    if (categoryMap[path]) {
+      setCurrentCategory(categoryMap[path]);
     }
   }, [location.pathname]);
+
+  const links = [
+    {
+      to: `/profile/${user?.id}`,
+      icon: "fa-solid fa-user",
+      category: "profile",
+    },
+    { to: "/community", icon: "fa-solid fa-globe", category: "community" },
+    { to: "/chatrooms", icon: "fa-solid fa-message", category: "chatrooms" },
+    { to: "/learning", icon: "fa-solid fa-book-open", category: "learning" },
+  ];
 
   return (
     user &&
@@ -47,41 +51,18 @@ const Header = () => {
             <img
               src={user.profilePicture}
               className="h-full w-full object-cover"
-              alt=""
             />
           </div>
         </div>
-        <Link className={`${LinkStyles}`} to={`/profile/${user?.id}`}>
-          <i
-            className={`fa-solid fa-user  ${iconStyles} ${
-              currentCategory === "profile" && "text-purple500"
-            }`}
-          ></i>
-        </Link>
-        <Link className={`${LinkStyles} `} to={`/community`}>
-          <i
-            className={`fa-solid fa-globe ${iconStyles}${
-              currentCategory === "community" && "text-purple500"
-            }`}
-          ></i>
-        </Link>
-
-        <Link className={LinkStyles} to={`/chatrooms`}>
-          <i
-            className={`fa-solid fa-message ${iconStyles} ${
-              currentCategory === "chatrooms" && "text-purple500"
-            }`}
-          ></i>
-        </Link>
-
-        <Link className={LinkStyles} to={`/learning`}>
-          <i
-            className={`fa-solid fa-book-open ${iconStyles} ${
-              currentCategory === "learning" && "text-purple500"
-            }`}
-          ></i>
-        </Link>
-        {/* <p className="font-courgette">LinguoLink</p> */}
+        {links.map(({ to, icon, category }, index) => (
+          <Link key={index} className={`${LinkStyles}`} to={to}>
+            <i
+              className={`fa-solid ${icon} ${iconStyles} ${
+                currentCategory === category && "text-purple500"
+              }`}
+            ></i>
+          </Link>
+        ))}
       </div>
     )
   );

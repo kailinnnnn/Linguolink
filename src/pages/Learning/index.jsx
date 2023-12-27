@@ -1,16 +1,10 @@
-import api from "../../utils/firebaseApi";
-import { useState, useEffect, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import useAuthStore from "../../zustand/AuthStore";
 
 const Learning = () => {
   const { user } = useAuthStore();
   const [category, setCategory] = useState("correction");
   const [scrollPosition, setScrollPosition] = useState(0);
-
-  useEffect(() => {
-    console.log(category);
-  }, [category]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,10 +26,6 @@ const Learning = () => {
             : "border-b-2 border-gray300 bg-gray100"
         }`}
       >
-        {/* <h1 className="mb-4 w-full pl-2 text-2xl font-semibold text-black">
-          Learning
-        </h1> */}
-
         {scrollPosition === 0 && (
           <h1 className={` mb-3 w-full pl-2 text-2xl font-semibold text-black`}>
             Learning
@@ -75,8 +65,7 @@ const Learning = () => {
           />
         </div>
       </header>
-      {/*       
-      <div className="mb-5 mt-24  w-full border-1 border-gray300" /> */}
+
       <main
         className={`${scrollPosition === 0 ? "mt-[92px]" : "mt-10"} flex 
         flex-wrap  gap-5 pt-6`}
@@ -97,7 +86,6 @@ const Learning = () => {
 
         {category === "correction" &&
           user?.revised?.map((sent, i) => {
-            console.log(sent);
             return (
               <div
                 className=" h-fit w-fit  max-w-xs rounded-2xl  bg-white p-5"

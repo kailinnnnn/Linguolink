@@ -14,7 +14,6 @@ module.exports = {
       purple100: "#f3eeff",
       purple300: "#9d6cff",
       purple500: "#7c4af6",
-
       white: "#ffffff",
       bgWhite: "#f8f8f8",
       gray100: "#f5f5f8",
@@ -25,7 +24,6 @@ module.exports = {
       transparentWhite: "rgb(255, 255, 255,0.2)",
       red500: "#ef4444",
       green500: "#22c55e",
-      // white: "#ffffff",
     },
     fontFamily: {
       inter: ["Inter", "sans-serif"],

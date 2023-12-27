@@ -1,10 +1,8 @@
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import { useState, useCallback, useEffect } from "react";
+import ReactLoading from "react-loading";
 import { Link } from "react-router-dom";
-import {
-  MarkerClusterer,
-  SuperClusterAlgorithm,
-} from "@googlemaps/markerclusterer";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import googleMapApi from "../../utils/googleMapApi";
 
 const containerStyle = {
@@ -19,6 +17,7 @@ function MembersMap({ members }) {
     googleMapsApiKey: "AIzaSyBeawM8HzUy5PhrWyAjdWueZtuUtmhT9E4",
   });
   const [map, setMap] = useState(null);
+<<<<<<< HEAD
   // const onLoad = useCallback(function callback(map) {
   //   const bounds = new window.google.maps.LatLngBounds(userCenter);
   //   map.fitBounds(bounds);
@@ -26,6 +25,8 @@ function MembersMap({ members }) {
   //   setMap(map);
   // }, []);
 
+=======
+>>>>>>> d5c1856
   const onLoad = useCallback(function callback(map) {
     setMap(map);
   }, []);
@@ -38,9 +39,11 @@ function MembersMap({ members }) {
   const [markerClusterer, setMarkerClusterer] = useState(null);
   const [locationText, setLocationText] = useState("");
 
+<<<<<<< HEAD
   //獲取使用者位置
+=======
+>>>>>>> d5c1856
   useEffect(() => {
-    //瀏覽器提供的獲取使用者位置的API
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const initialUserCenter = {
@@ -49,7 +52,6 @@ function MembersMap({ members }) {
         };
         setUserCenter(initialUserCenter);
       },
-      // 若未開啟位置追蹤，則跳出提示'允許存取使用者位置來使用此功能'
       () => {
         Swal.fire({
           position: "middle",
@@ -66,17 +68,12 @@ function MembersMap({ members }) {
     if (isLoaded) {
       const markers = members.map((member, i) => {
         const label = member.name;
-
-        // 在使用地圖 API 之前，檢查 window.google 是否已經定義
-        console.log(member);
         if (
           window.google &&
           window.google.maps &&
           member?.location?.geopoint?._lat &&
           member?.location?.geopoint?._long
         ) {
-          // 創建 Google 地圖標記實例
-
           const marker = new window.google.maps.Marker({
             position: {
               lat: member.location.geopoint._lat,
@@ -85,14 +82,12 @@ function MembersMap({ members }) {
             label,
           });
 
-          // 當標記被點擊時，打開信息窗口
           marker.addListener("click", () => {
             setShownMember(member);
           });
 
           return marker;
         }
-        // return null; // 處理 Google Maps API 尚未載入的情況
       });
 
       const clusterer = new MarkerClusterer({ markers, map });
@@ -120,15 +115,7 @@ function MembersMap({ members }) {
         onLoad={onLoad}
         onUnmount={onUnmount}
       >
-        <MarkerF
-          position={userCenter} //使用者位置，帶入經緯度
-          // icon={{
-          //   url: require("../../Assets/CarIcon.svg").default,
-          //   scaledSize: new window.google.maps.Size(50, 35),
-          //   origin: new window.google.maps.Point(0, 0),
-          //   anchor: new window.google.maps.Point(15, 15),
-          // }}
-        ></MarkerF>
+        <MarkerF position={userCenter}></MarkerF>
       </GoogleMap>
       {shownMember && (
         <div className="z-1000 fixed right-6 top-6 flex h-[calc(100%-3rem)] w-80 flex-col items-center overflow-hidden rounded-2xl bg-gray100 p-6 shadow">
@@ -186,15 +173,15 @@ function MembersMap({ members }) {
       )}
     </div>
   ) : (
-    <></>
+    <div className="flex h-screen min-w-full items-center justify-center overflow-hidden pb-10">
+      <ReactLoading
+        type="spin"
+        color="#9d6cff"
+        height={"7.5%"}
+        width={"7.5%"}
+      />
+    </div>
   );
 }
 
 export default MembersMap;
-
-// //   infoWindow.setContent(label);
-// //   infoWindow.open(map, marker);
-// const infoWindow = new window.google.maps.InfoWindow({
-//   content: "",
-//   disableAutoPan: true,
-// });
