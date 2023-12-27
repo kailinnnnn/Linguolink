@@ -3,15 +3,11 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import bgImage from "./bg.jpg";
-import googleIcon from "./google.avif";
 import { Checkbox } from "@nextui-org/react";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, ButtonGroup } from "@nextui-org/react";
 import googleMapApi from "../../utils/googleMapApi";
 
 const Signin = () => {
-  const { user, login, isLogin } = useAuthStore();
+  const { login, isLogin } = useAuthStore();
   const [isRegistering, setRegistering] = useState(false);
   const [isNextPage, setIsNextPage] = useState(false);
   const [location, setLocation] = useState(null);
@@ -262,13 +258,6 @@ const Signin = () => {
                 }
                 onClick={() => {
                   handleNextPage();
-                  console.log(
-                    !emailRef.current?.value,
-                    !passwordRef.current?.value,
-                    !nameRef.current?.value,
-                    !birthdateRef.current?.value,
-                    !location,
-                  );
                 }}
                 className=" my-4 mb-6 w-72 rounded-lg border-2 bg-purple500 px-4 py-2 text-white"
               >
@@ -333,10 +322,7 @@ const Signin = () => {
                 </div>
               </div>
               <div className="mb-4 flex flex-col ">
-                <small className="mb-2">
-                  {" "}
-                  Translate received messages into
-                </small>
+                <small className="mb-2">Translate received messages into</small>
                 <select
                   ref={translateRef}
                   className=" rounded-lg px-4 py-2 text-black"
@@ -362,22 +348,8 @@ const Signin = () => {
                     >
                       text and voice messages
                     </Checkbox>
-
-                    {/* <input
-                    type="checkbox"
-                    value="textAndVoice"
-                    onChange={() => handleCheckboxChange("textAndVoice")}
-                  />
-                  text and voice messages */}
                   </label>
                   <label className="mr-3">
-                    {/* <input
-                    type="checkbox"
-                    value="voiceAndVideo"
-                    onChange={() => handleCheckboxChange("voiceAndVideo")}
-                  />
-                  voice or video calls */}
-
                     <Checkbox
                       defaultSelected
                       size="sm"
@@ -400,9 +372,6 @@ const Signin = () => {
                     >
                       in-person meetings
                     </Checkbox>
-                    {/* <input
-                
-                  /> */}
                   </label>
                 </div>
               </div>

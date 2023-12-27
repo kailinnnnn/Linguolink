@@ -1,6 +1,4 @@
-import api from "../../utils/firebaseApi";
-import { useState, useEffect, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import useAuthStore from "../../zustand/AuthStore";
 
 const Learning = () => {
@@ -10,9 +8,7 @@ const Learning = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // if (window.scrollY > 40) {
       setScrollPosition(window.scrollY);
-      // }
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -69,8 +65,7 @@ const Learning = () => {
           />
         </div>
       </header>
-      {/*       
-      <div className="mb-5 mt-24  w-full border-1 border-gray300" /> */}
+
       <main
         className={`${scrollPosition === 0 ? "mt-[92px]" : "mt-10"} flex 
         flex-wrap  gap-5 pt-6`}

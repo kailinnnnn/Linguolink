@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 function App() {
   const { user, login, setUser, isLogin } = useAuthStore();
   const { setChatrooms } = useChatroomsStore();
-  const { webRTCInfo, setWebRTCInfo } = useWebRTCStore();
+  const { setWebRTCInfo } = useWebRTCStore();
   const navigate = useNavigate();
   useEffect(() => {
     if (user) {
@@ -52,10 +52,6 @@ function App() {
     localStorage.getItem("user") &&
       login(JSON.parse(localStorage.getItem("user")));
   }, []);
-
-  useEffect(() => {
-    console.log("trigger WebRTC monitor", webRTCInfo);
-  }, [webRTCInfo]);
 
   useEffect(() => {
     if (!user && !localStorage.getItem("user")) {

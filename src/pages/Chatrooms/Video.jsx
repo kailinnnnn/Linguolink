@@ -53,19 +53,13 @@ const Video = ({
       };
       peerConnection.current.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log("send ice candidate to remote");
-          // 將 ICE candidate 通知給對方，這裡使用你的 API 來傳送 candidate
-          api
-            .sendIceCandidateToRemote(
-              chatroomId,
-              user.id,
-              chatPartner.id,
-              event.candidate,
-              userVideoRoleRef.current,
-            )
-            .then(() => {
-              console.log("send ice candidate to remote");
-            });
+          api.sendIceCandidateToRemote(
+            chatroomId,
+            user.id,
+            chatPartner.id,
+            event.candidate,
+            userVideoRoleRef.current,
+          );
           peerConnection.current.onicecandidate = null;
         }
       };
@@ -76,39 +70,26 @@ const Video = ({
             await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
               isConnecting: true,
             });
-            console.log("offerer set video status");
-            return;
           }
 
           if (webRTCInfo[0] && !webRTCInfo[0]?.offer) {
             const offer = await peerConnection.current.createOffer();
-            console.log("create offer");
             await peerConnection.current.setLocalDescription(offer);
-            console.log("set local description");
             await api.sendOffer(chatroomId, user.id, chatPartner.id, offer);
-            console.log("offerer send offer");
-            return;
           }
 
           if (
             webRTCInfo[0].answer &&
             !peerConnection.current.currentRemoteDescription
           ) {
-            console.log(peerConnection.current.currentRemoteDescription);
-            console.log("offerer get remote answer");
             const answer = new RTCSessionDescription(webRTCInfo[0].answer);
             await peerConnection.current.setRemoteDescription(answer);
-            return;
           }
 
-          if (
-            webRTCInfo[0]?.answerIceCandidates
-            // !peerConnection.current.currentRemoteDescription
-          ) {
+          if (webRTCInfo[0]?.answerIceCandidates) {
             await peerConnection.current.addIceCandidate(
               new RTCIceCandidate(webRTCInfo[0].answerIceCandidates),
             );
-            console.log(peerConnection.current);
           }
         }
 
@@ -124,15 +105,10 @@ const Video = ({
             await peerConnection.current.setLocalDescription(answer);
             api.sendAnswer(chatroomId, user.id, chatPartner.id, answer);
           }
-
           if (webRTCInfo[0]?.offerIceCandidates) {
-            console.log(2);
-            // webRTCInfo[0].offerIceCandidates.forEach((candidate) => {
             await peerConnection.current.addIceCandidate(
               new RTCIceCandidate(webRTCInfo[0].offerIceCandidates),
             );
-            console.log(peerConnection.current);
-            // });
           }
         }
 
@@ -146,29 +122,6 @@ const Video = ({
   }, [webRTCInfo]);
 
   const handleEndVideoCall = async () => {
-    // console.log(localStreamRef);
-    // if (localStreamRef.current.srcObject) {
-    //   localStreamRef.current.srcObject.getTracks().forEach((track) => {
-    //     track.stop();
-    //   });
-    //   localStreamRef.current = null;
-    //   console.log("stop local stream");
-    // }
-
-    // console.log(remoteStreamRef);
-    // if (remoteStreamRef.current.srcObject) {
-    //   remoteStreamRef.current.srcObject
-    //     .getTracks()
-    //     .forEach((track) => track.stop());
-    //   remoteStreamRef.current = null;
-    //   console.log("stop remote stream");
-    // }
-    // if (streamRef.current) {
-    //   streamRef.current.getTracks().forEach((track) => track.stop());
-    //   streamRef.current = null;
-    //   console.log("stop stream");
-    // }
-
     peerConnection.current.close();
 
     await api.setVideoStatus(chatroomId, user.id, chatPartner.id, {
@@ -188,7 +141,6 @@ const Video = ({
   useEffect(() => {
     return () => {
       handleEndVideoCall();
-      console.log("video call end");
     };
   }, []);
 

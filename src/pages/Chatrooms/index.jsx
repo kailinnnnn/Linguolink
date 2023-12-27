@@ -1,5 +1,5 @@
 import api from "../../utils/firebaseApi";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import useChatroomsStore from "../../zustand/ChatroomsStore";
@@ -17,7 +17,7 @@ const Chatrooms = () => {
     const options = {
       hour: "numeric",
       minute: "numeric",
-      hour12: false, // 使用 24 小時制
+      hour12: false,
     };
 
     const formattedTime = new Intl.DateTimeFormat("default", options).format(
@@ -25,17 +25,13 @@ const Chatrooms = () => {
     );
     return formattedTime;
   };
-  useEffect(() => {
-    console.log(isVideoOpen);
-  }, [isVideoOpen]);
 
-  //＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊尚未了解＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
   const sortedChatrooms = chatrooms?.sort((a, b) => {
     const aTime = a.messages[a.messages.length - 1]?.createdAt || new Date(0);
     const bTime = b.messages[b.messages.length - 1]?.createdAt || new Date(0);
     return bTime - aTime;
   });
-  //＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊尚未了解＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+
   return (
     <div className=" flex h-full max-h-full w-[calc(100%)]  bg-white pl-24">
       {chatrooms && (

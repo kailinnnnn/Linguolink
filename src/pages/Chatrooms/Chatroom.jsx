@@ -3,10 +3,8 @@ import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useParams } from "react-router-dom";
 import useAuthStore from "../../zustand/AuthStore";
 import useWebRTCStore from "../../zustand/webRTCStore";
-import MessageList from "./MessageList";
 import Record from "./Record";
 import Video from "./Video";
-import { faLadderWater } from "@fortawesome/free-solid-svg-icons";
 
 const Chatroom = ({
   chatPartner,
@@ -23,8 +21,6 @@ const Chatroom = ({
   );
   const [selectedMessageTag, setSelectedMessageTag] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isReviseOpen, setIsReviseOpen] = useState(false);
-  const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isSaveWordOpen, setIsSaveWordOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
 
@@ -69,13 +65,9 @@ const Chatroom = ({
   useEffect(() => {
     if (
       userVideoRoleRef.current === "answer" &&
-      webRTCInfo?.[0]?.offer &&
       webRTCInfo?.[0]?.isConnecting &&
-      !webRTCInfo?.[0]?.offerIceCandidates &&
-      !webRTCInfo?.[0]?.answerIceCandidates &&
-      !webRTCInfo?.[0]?.answer
+      !webRTCInfo?.[0]?.offer
     ) {
-      console.log("answer");
       setIsVideoOpen(true);
     }
 
@@ -86,19 +78,14 @@ const Chatroom = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      console.log(
-        "contains",
-        selectedMessageTag?.tag?.contains(event.target),
-        selectedMessageTag?.tag,
-        event.target,
-      );
+      const clickedOnSaveButton = event.target.closest(".saveMenu") !== null;
+
       const isClickedOutside =
         selectedMessageTag?.tag &&
-        !selectedMessageTag?.tag.contains(event.target);
+        !selectedMessageTag?.tag.contains(event.target) &&
+        !clickedOnSaveButton;
 
       if (isClickedOutside) {
-        // 點擊了訊息之外的地方，關閉表單
-        console.log("Clicked outside of message");
         const newIsMenuOpenArray = [...isMenuOpenArray];
         newIsMenuOpenArray[selectedMessageTag.index] = false;
         setIsMenuOpenArray(newIsMenuOpenArray);
@@ -113,10 +100,6 @@ const Chatroom = ({
     };
   }, [selectedMessageTag]);
 
-  useEffect(() => {
-    console.log(isMenuOpen);
-  });
-
   useLayoutEffect(() => {
     if (chatContainerRef.current) {
       const { scrollHeight, clientHeight } = chatContainerRef.current;
@@ -126,36 +109,26 @@ const Chatroom = ({
 
   const handleSendMessage = async () => {
     try {
-      if (selectedImage) {
-        await api.uploadFile(selectedImage).then((imageUrl) => {
-          api.sendMessage(
-            chatroomId,
-            user.id,
-            chatPartner.id,
-            messageRef.current.value === "" ? null : messageRef.current.value,
-            toReviseSentRef.current?.textContent,
-            revisedRef.current?.value,
-            commentRef.current?.value,
-            imageUrl,
-          );
-        });
-        setSelectedImage(null);
-        messageRef.current.value = "";
-      } else {
-        await api.sendMessage(
-          chatroomId,
-          user.id,
-          chatPartner.id,
-          messageRef?.current?.value,
-          toReviseSentRef.current?.textContent,
-          revisedRef.current?.value,
+      let messageData = {
+        chatroomId,
+        senderId: user.id,
+        receiverId: chatPartner.id,
+        message: messageRef.current?.value,
+        toReviseSent: toReviseSentRef.current?.textContent,
+        revised: revisedRef.current?.value,
+        comment: commentRef.current?.value,
+      };
 
-          commentRef.current?.value,
-        );
-        messageRef.current.value = "";
+      if (selectedImage) {
+        const imageUrl = await api.uploadFile(selectedImage);
+        messageData = { ...messageData, imageUrl };
+        setSelectedImage(null);
       }
+
+      await api.sendMessage(messageData);
+      messageRef.current.value = "";
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   };
 
@@ -168,43 +141,20 @@ const Chatroom = ({
       chatroomId,
     );
   };
-  const handleFileUpload = () => {
-    const selectedFile = fileInputRef.current.files[0];
-    //先存進storage獲取url後 再呼叫sendMessage把url存進資料庫
-    api.uploadFile(selectedFile).then((imageUrl) => {
-      api.sendMessage(
-        chatroomId,
-        user.id,
-        chatPartner.id,
-        messageRef.current.value,
-        toReviseSentRef.current?.textContent,
-        toCommentSentRef.current?.textContent,
-        revisedRef.current?.value,
-        commentRef.current?.value,
-        imageUrl,
-      );
-    });
-  };
-
-  const handleVideoCall = async () => {
-    setIsVideoOpen(true);
-    userVideoRoleRef.current = "offer";
-  };
 
   const timestampToTime = (timestamp) => {
     const date = timestamp.toDate();
-
     const options = {
       hour: "numeric",
       minute: "numeric",
-      hour12: false, // 使用 24 小時制
+      hour12: false,
     };
-
     const formattedTime = new Intl.DateTimeFormat("default", options).format(
       date,
     );
     return formattedTime;
   };
+
   const handleSaveWord = () => {
     setIsSaveWordOpen(!isSaveWordOpen);
     const data = {
@@ -220,38 +170,9 @@ const Chatroom = ({
         isVideoOpen && "fixed w-[calc((100vw-96px))]"
       }`}
     >
-      {/* <MessageList /> */}
       {!isVideoOpen && chatPartner && (
         <div className="relative flex  h-full max-h-full w-full">
-          <header className="fixed top-0 z-10 flex h-20  w-[calc((100vw-96px)*0.725)] items-center border-b-2 border-gray300 bg-white p-6 ">
-            <div
-              className="mr-4  flex h-10 min-h-fit w-10 min-w-fit items-center overflow-visible rounded-full border-white"
-              onMouseOver={() => {}}
-            >
-              <img
-                src={chatPartner.profilePicture}
-                alt=""
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            </div>
-            {chatPartner && (
-              <p className="flex-grow font-semibold text-black">
-                {chatPartner.name}
-              </p>
-            )}
-            <button className=" ">
-              <i className="fa-solid fa-phone text-xl text-gray500 hover:text-purple500"></i>
-            </button>
-            {!isVideoOpen && (
-              <button className="" onClick={handleVideoCall}>
-                <i className="fa-solid fa-video text-main ml-6 text-xl text-gray500 hover:text-purple500"></i>
-              </button>
-            )}
-
-            <button className="bg-gray-500">
-              <i className="fa-solid  fa-ellipsis-vertical text-xl text-white"></i>
-            </button>
-          </header>
+          <Header chatPartner={chatPartner} ref={userVideoRoleRef} />
           <div
             className=" my-[104px]  max-h-[calc(100vh-218px)] w-full overflow-hidden overflow-y-auto px-6"
             ref={chatContainerRef}
@@ -346,7 +267,6 @@ const Chatroom = ({
                         {isMenuOpenArray[index] && (
                           <div className=" ml-3 h-full">
                             <div className="relative ">
-                              {" "}
                               <i
                                 className="fa-solid fa-ellipsis text-gray500"
                                 onClick={() => {
@@ -394,7 +314,7 @@ const Chatroom = ({
                                     Comment
                                   </button>
                                   <button
-                                    className="px-3 py-2 hover:text-purple500"
+                                    className="saveMenu px-3 py-2 hover:text-purple500"
                                     onClick={() => {
                                       setIsSaveWordOpen(!isSaveWordOpen);
                                     }}
@@ -490,7 +410,6 @@ const Chatroom = ({
                             ? "ml-auto text-right"
                             : "ml-auto text-left"
                         }`}
-                        onClick={() => console.log(message.sender, user.id)}
                       >
                         {createdAt}
                       </small>
@@ -674,10 +593,7 @@ const Chatroom = ({
                     }}
                     accept="image/*"
                   />
-                  <i
-                    className="fa-solid fa-image text-xl text-gray500 hover:text-purple500"
-                    // onClick={() => fileInputRef.current.click()}
-                  ></i>
+                  <i className="fa-solid fa-image text-xl text-gray500 hover:text-purple500"></i>
                 </label>
 
                 <input
@@ -694,7 +610,6 @@ const Chatroom = ({
 
                 <button
                   onClick={handleSendMessage}
-                  // disabled={messageRef.current?.value === ""}
                   className="flex h-10 w-10 items-center justify-center rounded-full"
                 >
                   <i
@@ -727,5 +642,3 @@ const Chatroom = ({
 };
 
 export default Chatroom;
-
-//

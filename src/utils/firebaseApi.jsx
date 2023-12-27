@@ -55,12 +55,9 @@ const api = {
         id: user.uid,
       };
 
-      if (docSnap.exists()) {
-        console.log("已註冊");
-      } else {
+      if (!docSnap.exists()) {
         await setDoc(userRef, newUser);
       }
-      console.log(newUser);
       return newUser;
     } catch (error) {
       console.log(error);
@@ -88,8 +85,7 @@ const api = {
       );
       const uid = userCredential.user.uid;
       const userRef = doc(db, "users", uid);
-      // const locationData = new GeoPoint(location.lat, location.lng);
-      console.log(location);
+
       let locationData = {};
       if (location) {
         locationData.geopoint = new GeoPoint(location.lat, location.lng);
@@ -98,7 +94,7 @@ const api = {
           country: location.country,
         };
       }
-      console.log(locationData);
+
       const userData = {
         name,
         email,
@@ -126,9 +122,7 @@ const api = {
           "https://firebasestorage.googleapis.com/v0/b/linguolink-e84b0.appspot.com/o/8ef34a64-68fc-4008-93f0-fa293b0ccc3d?alt=media&token=680f3317-8725-4ee1-8144-e07ee99ed410",
         mainTopic: "",
       };
-      console.log(userData);
       await setDoc(userRef, userData);
-      console.log("新用戶已成功創建");
       return { email, password };
     } catch (error) {
       console.error("創建新用戶時發生錯誤", error);
@@ -226,21 +220,7 @@ const api = {
       throw error;
     }
   },
-  /*
-  為什麼不能這樣寫？
-  async listenChatrooms(userId, callback) {
-    const userChatroomsRef = collection(db, "users", userId, "chatrooms");
-    return onSnapshot(userChatroomsRef, (querySnapshot) => {
-      console.log("Monitoring chatrooms");
-      const userChatrooms = querySnapshot.docs.map((doc) => {
-        return {
-          id: doc.id,
-          ...doc.data(),
-        };
-      });
-      callback(userChatrooms);
-    });
-  },*/
+
   async listenChatrooms(userId, callback) {
     const userChatroomsRef = collection(db, "users", userId, "chatrooms");
     const unsubChatrooms = onSnapshot(userChatroomsRef, (querySnapshot) => {
@@ -262,8 +242,6 @@ const api = {
     const unsubChatrooms = onSnapshot(
       userChatroomsRef,
       async (querySnapshot) => {
-        // webrtc有新寫入時，不會console.log(1)，得證子集和變化不會觸發母集的onSnapshot
-
         querySnapshot.docs.map(async (doc) => {
           const webRTCRef = collection(doc.ref, "webrtc");
 
@@ -300,17 +278,18 @@ const api = {
       throw error;
     }
   },
-  async sendMessage(
-    chatroomId,
-    userId,
-    targetUserId,
-    content,
-    toReviseSent,
-    revised,
-    comment,
-    imageUrl,
-    recordUrl,
-  ) {
+  async sendMessage(messageData) {
+    const {
+      chatroomId,
+      userId,
+      targetUserId,
+      content,
+      toReviseSent,
+      revised,
+      comment,
+      imageUrl,
+    } = messageData;
+
     try {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
       await updateDoc(chatroomRef, {
@@ -369,7 +348,6 @@ const api = {
       const chatroomRef = doc(db, "chatrooms", chatroomId);
       const unsubscribe = onSnapshot(chatroomRef, (doc) => {
         const chatroomData = doc.data();
-        console.log(chatroomData);
         chatroomData.id = doc.id;
         callback(chatroomData);
       });
@@ -421,7 +399,6 @@ const api = {
       const storageRef = ref(storage, uuidv4());
       const a = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
-      console.log(url);
       return url;
     } catch (error) {
       console.log(error);
@@ -628,9 +605,7 @@ const api = {
           country: data.location.country,
         };
       }
-
       data.location = locationData;
-      console.log(data.location);
       await updateDoc(userRef, data);
     } catch (error) {
       console.log(error);

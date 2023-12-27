@@ -10,7 +10,6 @@ const titleStyles = "text-xl font-semibold text-black mr-5 whitespace-nowrap";
 const Profile = () => {
   const { logout, user, isLogin, setUser } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState("aboutMe");
-  const [location, setLocation] = useState(null);
   const [editingBlock, setEditingBlock] = useState(null);
   const [inputPhoto, setInputPhoto] = useState(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
@@ -101,9 +100,6 @@ const Profile = () => {
     setEditingBlock(null);
   };
 
-  useEffect(() => {
-    console.log(user);
-  }, [user]);
   return (
     isLogin &&
     user && (
@@ -134,7 +130,6 @@ const Profile = () => {
                   onChange={(e) => {
                     setEditingBlock("profilePiture");
                     handleUpdateProfilePicture(e);
-                    console.log(user.profilePicture);
                   }}
                   accept="image/*"
                   src={user.profilePicture}
@@ -310,13 +305,7 @@ const Profile = () => {
               <div className="relative my-8  w-full border-1 border-gray300" />
               <div className="flex">
                 <p className={titleStyles}> Location</p>
-                <p
-                  onClick={() => {
-                    console.log(user);
-                  }}
-                >{`${user.location?.placename?.country},${user.location?.placename?.city}`}</p>
-                {/* {location && <p>{`${location?.country},${location?.city}`}</p>} */}
-
+                <p>{`${user.location?.placename?.country},${user.location?.placename?.city}`}</p>
                 <button
                   onClick={() => {
                     updateLocation();
@@ -447,18 +436,6 @@ const Profile = () => {
                         </button>
                       </div>
                     ) : (
-                      //  inputPhoto?.index === index ? (
-                      //   <div key={index}>
-                      //     <img
-                      //       src={URL.createObjectURL(inputPhoto.selectedFile)}
-                      //       alt=""
-                      //       className="h-32 w-32"
-                      //     />
-                      //     <button>
-                      //       <i className="fa-solid fa-xmark"></i>
-                      //     </button>
-                      //   </div>
-                      // ) :
                       <label
                         className="flex h-48 w-72 items-center justify-center rounded-xl bg-gray300"
                         key={index}
@@ -491,9 +468,6 @@ const Profile = () => {
               <div className="relative my-8  w-full border-1 border-gray300" />
               <div className="flex items-center">
                 <p className={`${titleStyles} `}> I can also speak fluently</p>
-                {/* {user?.alsoSpeak?.map((language) => {
-                  return <p className="mr-3">{language}</p>;
-                })} */}
                 <p className="mr-3">{user.alsoSpeak}</p>
                 <p className="flex items-center justify-center text-purple500">
                   <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
@@ -557,9 +531,7 @@ const Profile = () => {
               <div>
                 <div className="flex  items-center ">
                   <p className={`${titleStyles} `}> My Topics</p>
-                  {/* <button className="mr-auto flex items-center justify-center text-purple500">
-                    <i className="fa-solid fa-pen p-1 text-xs"></i>Edit
-                  </button> */}
+
                   {editingBlock === "mainTopic" ? (
                     <>
                       <button
