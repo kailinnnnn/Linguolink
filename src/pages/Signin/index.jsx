@@ -277,7 +277,7 @@ const Signin = () => {
                 <i className="fa-solid fa-arrow-left"></i>
               </button>
 
-              <div className="mb-4 flex flex-col gap-2">
+              <div className="mb-4 flex w-full flex-col gap-2">
                 <small> My native language</small>
                 <select
                   ref={nativeLanguageRef}
@@ -288,11 +288,11 @@ const Signin = () => {
                   <option>Español</option>
                 </select>
               </div>
-              <div className="mb-4 flex  flex-col  gap-2">
+              <div className="mb-4 flex  w-full flex-col gap-2">
                 <small> I can also speak fluently</small>
                 <select
                   ref={alsoSpeakRef}
-                  className="srounded-lg px-4 py-2 text-black"
+                  className="rounded-lg px-4 py-2 text-black"
                 >
                   <option>English</option>
                   <option>繁體中文</option>
@@ -300,12 +300,12 @@ const Signin = () => {
                   <option>Español</option>
                 </select>
               </div>
-              <div className="mb-4 flex flex-col gap-2 ">
+              <div className="mb-4 flex w-full flex-col gap-2">
                 <small> I am learning</small>
-                <div className="flex">
+                <div className="flex w-full">
                   <select
                     ref={learningLanguageRef}
-                    className="mr-2  rounded-lg px-4 py-2 text-black"
+                    className="mr-2  w-full rounded-lg px-4 py-2 text-black"
                   >
                     <option>English</option>
                     <option>繁體中文</option>
@@ -322,7 +322,7 @@ const Signin = () => {
                   </select>
                 </div>
               </div>
-              <div className="mb-4 flex flex-col ">
+              <div className="mb-4 flex w-full flex-col">
                 <small className="mb-2">Translate received messages into</small>
                 <select
                   ref={translateRef}
@@ -340,7 +340,6 @@ const Signin = () => {
                 <div className=" flex">
                   <label className="mr-3">
                     <Checkbox
-                      defaultSelected
                       size="sm"
                       type="checkbox"
                       value="textAndVoice"
@@ -352,7 +351,6 @@ const Signin = () => {
                   </label>
                   <label className="mr-3">
                     <Checkbox
-                      defaultSelected
                       size="sm"
                       type="checkbox"
                       value="voiceAndVideo"
@@ -364,7 +362,6 @@ const Signin = () => {
                   </label>
                   <label className="mr-3">
                     <Checkbox
-                      defaultSelected
                       size="sm"
                       type="checkbox"
                       value="meetings"
