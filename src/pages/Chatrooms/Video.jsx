@@ -79,7 +79,7 @@ const Video = ({
           }
 
           if (
-            webRTCInfo[0].answer &&
+            webRTCInfo[0]?.answer &&
             !peerConnection.current.currentRemoteDescription
           ) {
             const answer = new RTCSessionDescription(webRTCInfo[0].answer);

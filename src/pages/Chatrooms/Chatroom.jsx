@@ -5,6 +5,7 @@ import useAuthStore from "../../zustand/AuthStore";
 import useWebRTCStore from "../../zustand/webRTCStore";
 import Record from "./Record";
 import Video from "./Video";
+import Header from "./Header";
 
 const Chatroom = ({
   chatPartner,
