@@ -31,7 +31,6 @@ const Community = () => {
 
   useEffect(() => {
     members.filter((member) => {
-      console.log(member);
       if (member.location == {}) {
         return member;
       }

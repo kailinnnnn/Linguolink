@@ -140,6 +140,7 @@ const Signin = () => {
               id="email"
               ref={emailRef}
               placeholder="Enter your email"
+              defaultValue="albert@gmail.com"
               className="w-72 rounded-lg px-4 py-2 text-black"
             />
           </div>
@@ -152,6 +153,7 @@ const Signin = () => {
               type="text"
               id="password"
               ref={passwordRef}
+              defaultValue="aaaaaa"
               placeholder="Enter your password"
               className="k w-72 rounded-lg px-4 py-2 text-black"
             />
@@ -191,7 +193,6 @@ const Signin = () => {
         </div>
       ) : (
         <div className=" l-28 relative mx-auto flex h-full min-h-screen w-2/3 flex-col items-center justify-center rounded-[30px] bg-gray100 p-24">
-          {/* Sign up */}
           {!isNextPage ? (
             <div className="flex flex-col items-center justify-center">
               <div className="mb-4 flex flex-col gap-2">

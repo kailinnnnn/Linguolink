@@ -6,7 +6,6 @@ const useChatroomsStore = create((set) => ({
     set((state) => ({
       chatrooms: newChatrooms,
     }));
-    console.log("set chatrooms again");
   },
 }));
 

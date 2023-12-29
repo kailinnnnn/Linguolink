@@ -119,7 +119,6 @@ const Profile = () => {
                   src={user.profilePicture}
                   alt=""
                   className="h-36 w-36 rounded-full object-cover"
-                  onClick={() => console.log(user.profilePicture)}
                 />
               )}
               <label className="absolute -bottom-2 -right-6">

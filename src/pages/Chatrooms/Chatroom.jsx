@@ -328,9 +328,6 @@ const Chatroom = ({
                               ) : (
                                 isSaveWordOpen && (
                                   <div className="text-slate-200 absolute -top-3 left-[2rem] z-10 flex flex-col rounded-xl  bg-purple100 p-4 shadow">
-                                    {/* <button className="flex ">
-                                    <i class="fa-solid fa-arrow-left mr-auto "></i>
-                                  </button> */}
                                     <div>
                                       <small className="mb-2 ml-1 flex">
                                         Collection

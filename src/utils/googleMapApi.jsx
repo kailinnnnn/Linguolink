@@ -16,7 +16,6 @@ const googleMapApi = {
           country = component?.long_name;
         }
       }
-      console.log({ city, country });
       return { city, country };
     } catch {
       (error) => {

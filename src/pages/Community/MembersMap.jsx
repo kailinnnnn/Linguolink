@@ -17,16 +17,7 @@ function MembersMap({ members }) {
     googleMapsApiKey: "AIzaSyBeawM8HzUy5PhrWyAjdWueZtuUtmhT9E4",
   });
   const [map, setMap] = useState(null);
-<<<<<<< HEAD
-  // const onLoad = useCallback(function callback(map) {
-  //   const bounds = new window.google.maps.LatLngBounds(userCenter);
-  //   map.fitBounds(bounds);
 
-  //   setMap(map);
-  // }, []);
-
-=======
->>>>>>> d5c1856
   const onLoad = useCallback(function callback(map) {
     setMap(map);
   }, []);
@@ -39,10 +30,6 @@ function MembersMap({ members }) {
   const [markerClusterer, setMarkerClusterer] = useState(null);
   const [locationText, setLocationText] = useState("");
 
-<<<<<<< HEAD
-  //獲取使用者位置
-=======
->>>>>>> d5c1856
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {

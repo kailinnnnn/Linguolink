@@ -29,7 +29,6 @@ function App() {
       const unsubUser = api.listenUser(user.id, (user) => {
         setUser(user);
       });
-      console.log("listenUser");
       return () => {
         unsubUser;
       };
@@ -58,12 +57,6 @@ function App() {
       navigate("/login");
     }
   }, []);
-
-  // useEffect(() => {
-  //   if (user) {
-  //     console.log(user.location);
-  //   }
-  // }, [user]);
 
   return (
     <NextUIProvider>
