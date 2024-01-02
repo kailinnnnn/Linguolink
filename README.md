@@ -1,27 +1,47 @@
-# React + TypeScript + Vite
+# LINGUOLINK
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A language exchange web application where users can look for learning partners across the world, engage in chat rooms for messaging and corrections, and enhance user interactions with video chats.
+<br>
 
-Currently, two official plugins are available:
+- Enabled real-time video calls by utilizing WebRTC's P2P structure and integrating ICE and SDP technologies.
+- Utilized Google Maps API to allow users to locate others which also showcases the total number of users in specific regions.
+- Used Zustand for state management, ensuring a single data source and a consistent and predictable state.
+- Implemented Firebase Authentication for user identity verification.
+- Designed data structures and utilized Cloud Firestore as the database.
+- Implemented products based on the Agile software development framework - Scrum, and utilizing Trello for project management.
+  <br>
+  <br>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Base
 
-## Expanding the ESLint configuration
+- React
+- Tailwind CSS
+- Zustand
+- Firebase
+- Cloud Firestore
+- WebRTC
+- Google Maps API
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Demo
 
-- Configure the top-level `parserOptions` property like this:
+- On the community page, choose to browse all users or search for users using the map.
 
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
-```
+<img src="./demo/community.gif" width="600">
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- Correct your chat partner's sentences or save unfamiliar words in chatroom.
+
+<img src="./demo/revise.gif" width="600">
+
+<img src="./demo/collection.gif" width="600">
+
+<br>
+<br>
+
+## Contect
+
+  <a href="https://www.linkedin.com/in/kailinyang-6ab02423b" text-decoration="none">
+    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" />
+  </a>
+  <a href="mailto:kailinnnnn0408@gmail.com">
+    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
+  </a>
